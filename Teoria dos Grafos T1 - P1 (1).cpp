@@ -1,4 +1,5 @@
 #include <bits/stdc++.h>
+//inclui as bibliotecas padrões de C ++
 using namespace std;
 class Graph {
 private:
