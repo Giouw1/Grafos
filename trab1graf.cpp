@@ -321,12 +321,13 @@ int main() {
     vector<vector<int>> paisdfs = {{},{},{}};
     for (int i = 0; i<3;i++){
      vector<vector<int>> aux = g.BFS(i);
+     vector<vector<int>> aux2 = g.DFS(i);
         paisbfs[i].push_back(aux[1][9]);
         paisbfs[i].push_back(aux[1][19]);
         paisbfs[i].push_back(aux[1][29]);
-        paisdfs[i].push_back(aux[1][9]);
-        paisdfs[i].push_back(aux[1][19]);
-        paisdfs[i].push_back(aux[1][29]);
+        paisdfs[i].push_back(aux2[1][9]);
+        paisdfs[i].push_back(aux2[1][19]);
+        paisdfs[i].push_back(aux2[1][29]);
 }
     vector<int> distancias;
     distancias.push_back(g.distancia(9,19));
