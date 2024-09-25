@@ -21,6 +21,7 @@ private:
         string line; //recebe a primeira linha, para saber o número de vértices
         getline(arquivo, line);
         numVertices = stoi(line); 
+        graus.resize(numVertices, 0);
         vector<vector<bool>> matrix(numVertices, vector<bool>(numVertices,0));
         while(getline(arquivo,line)){
             for(int i = 0; i<line.length();i++){
@@ -41,6 +42,7 @@ private:
             string line; //recebe a primeira linha, para saber o número de vértices
             getline(arquivo, line);
             numVertices = stoi(line);
+            graus.resize(numVertices, 0);
             vector<vector<int>> lista(numVertices);
             while(getline(arquivo,line)){
                 for(int i = 0; i<line.length();i++){
@@ -54,26 +56,6 @@ private:
             arquivo.close();
             return lista;
         };
-
-    //faz uma lista com o grau de cada vértice i no índice i
-
-    void calculaGraus() {
-        graus.resize(numVertices, 0);
-        if (usaMatriz) {
-            for (int i = 0; i < numVertices; i++) {
-                graus[i] = 0;
-                for (int j = 0; j < numVertices; j++) {
-                    if (matrizAdj[i][j] == 1) {
-                        graus[i]++;
-                    }
-                }
-            }
-        } else {
-            for (int i = 0; i < numVertices; i++) {
-                graus[i] = listaAdj[i].size();
-            }
-        }
-    }
     // Função recursiva para DFS
     void DFSLista(int v, std::vector<int>& nivel, std::vector<int>& pai) {
         vector<int> pilha;
@@ -131,7 +113,6 @@ public:
     }
 
     int grauMinimo() {
-        calculaGraus();
         int grau_min = graus[0];
         for(int i = 0; i < numVertices; i++){
             if(graus[i] < grau_min) grau_min = graus[i];
@@ -140,7 +121,6 @@ public:
         }
 
     int grauMaximo() {
-        calculaGraus();
         int grau_max = graus[0];
         for(int i = 0; i < numVertices; i++){
             if(graus[i] > grau_max) grau_max = graus[i];
@@ -149,21 +129,19 @@ public:
     }
 
     double grauMedio() {
-        calculaGraus();
         double somaGraus = 0;
         for(int i = 0; i < numVertices; i++) somaGraus += graus[i];
         return somaGraus/numVertices;
     }
 
     double medianaGrau() {
-
-        calculaGraus();
+        vector<int> copia = graus;
         //colocar a lista em ordem através de uma ordenação
-        sort(graus.begin(), graus.end());
+        sort(copia.begin(), copia.end());
         if (numVertices % 2 == 0) {
-            return (graus[numVertices / 2 - 1] + graus[numVertices / 2]) / 2.0;
+            return (copia[numVertices / 2 - 1] + copia[numVertices / 2]) / 2.0;
         } else {
-            return graus[numVertices / 2];
+            return copia[numVertices / 2];
         }
     }
     vector<vector<int>> BFS(int verticeInicial) {
