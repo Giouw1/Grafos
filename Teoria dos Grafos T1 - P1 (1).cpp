@@ -278,7 +278,7 @@ int main() {
     cout << "Usar matriz de adjacencia: ";
     cin >> usaMatriz;
 
-    Graph g("grafo_2.txt", usaMatriz);
+    Graph g("grafo_6.txt", usaMatriz);
 
 //Script para o estudo de caso
     chrono::duration<double> tempod;
@@ -301,7 +301,7 @@ int main() {
     for (int i = 0; i<3;i++){
      vector<vector<int>> aux = g.BFS(i);
      vector<vector<int>> aux2 = g.DFS(i);
-        paisbfs[i].push_back(aux[1][10]);
+        paisbfs[i].push_back(aux[1][9]);
         paisbfs[i].push_back(aux[1][19]);
         paisbfs[i].push_back(aux[1][29]);
         paisdfs[i].push_back(aux2[1][9]);
@@ -338,7 +338,4 @@ int main() {
     //Informação acima da outfile
 
     return 0;
-}    }
-    cout << "Diametro " << g.diametro() << '\n';
-    return 0;
-}
+}    
