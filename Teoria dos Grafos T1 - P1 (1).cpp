@@ -27,6 +27,8 @@ private:
             for(int i = 0; i<line.length();i++){
                 if (line[i] == ' '){
                 this->numArestas ++;
+                graus[stoi(line.substr(0,i))-1]+= 1;
+                graus[stoi(line.substr(i+1))-1]+= 1;
                 matrix[stoi(line.substr(0,i))-1][stoi(line.substr(i+1))-1] = 1;
                 matrix[stoi(line.substr(i+1))-1][stoi(line.substr(0,i))-1] = 1;
                     };
@@ -48,6 +50,8 @@ private:
                 for(int i = 0; i<line.length();i++){
                     if (line[i] == ' '){
                     this->numArestas ++;
+                    graus[stoi(line.substr(0,i))-1]+= 1;
+                    graus[stoi(line.substr(i+1))-1]+= 1;
                     lista[stoi(line.substr(0,i))-1].push_back(stoi(line.substr(i+1))-1);
                     lista[stoi(line.substr(i+1))-1].push_back(stoi(line.substr(0,i))-1);
                         };
