@@ -361,7 +361,7 @@ int main() {
     //Informação acima da outfile
     int a = 0;
     while(a < numVertices){
-    cout << "BFS de " << a+1 << '\n';
+    cout << "Árvore geradora a partir do vértice " << a+1 << '\n';
     cout << "Vértice  |  Nível  |  Pai\n";
     for (int i = 0; i < numVertices; i++) {
         cout << "   " << i + 1 << "     |    " << g.BFS(a)[0][i] << "    |   " << g.BFS(a)[1][i] << "\n";
