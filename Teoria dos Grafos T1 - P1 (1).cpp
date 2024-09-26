@@ -18,19 +18,18 @@ private:
     // Função para gerar a matriz de adjacência a partir de um arquivo
     vector<vector<bool>> geraMatriz(string grafopath) {
         ifstream arquivo(grafopath); // Abre o arquivo do grafo
-        string line;                 // Armazena linhas do arquivo
-        getline(arquivo, line);      // Lê a primeira linha para obter o número de vértices
+        string line;                 
+        getline(arquivo, line);    
         numVertices = stoi(line);    // Converte a linha em número de vértices
         graus.resize(numVertices, 0);  // Inicializa o vetor de graus com todos os elementos iguais a 0
         vector<vector<bool>> matrix(numVertices, vector<bool>(numVertices, 0));  // Inicializa a matriz de adjacência
-
         // Processa cada linha do arquivo para preencher a matriz
         while (getline(arquivo, line)) {
             for (int i = 0; i < line.length(); i++) {
                 if (line[i] == ' ') {  // Identifica a separação entre vértices conectados
                     this->numArestas++;  // Incrementa o número de arestas
                     // Incrementa o grau dos vértices conectados
-                    graus[stoi(line.substr(0, i)) - 1]++;//Incrementa 1 no grau dos vértices lidos
+                    graus[stoi(line.substr(0, i)) - 1]++;
                     graus[stoi(line.substr(i + 1)) - 1]++;
                     // Marca a conexão na matriz de adjacência
                     matrix[stoi(line.substr(0, i)) - 1][stoi(line.substr(i + 1)) - 1] = 1;
@@ -39,7 +38,7 @@ private:
             }
         }
         arquivo.close();  // Fecha o arquivo
-        return matrix;    // Retorna a matriz de adjacência gerada
+        return matrix;    
     }
 
     // Função para gerar a lista de adjacência a partir de um arquivo
@@ -50,13 +49,12 @@ private:
         numVertices = stoi(line);  // Converte a primeira linha no número de vértices
         graus.resize(numVertices, 0);  // Inicializa o vetor de graus
         vector<vector<int>> lista(numVertices);  // Inicializa a lista de adjacência
-
         // Processa cada linha do arquivo para preencher a lista de adjacência
         while (getline(arquivo, line)) {
             for (int i = 0; i < line.length(); i++) {
                 if (line[i] == ' ') {
                     this->numArestas++;  // Incrementa o número de arestas
-                    graus[stoi(line.substr(0, i)) - 1]++; //Incrementa 1 no grau dos vértices lidos
+                    graus[stoi(line.substr(0, i)) - 1]++; //Incrementa o grau dos vértices lidos
                     graus[stoi(line.substr(i + 1)) - 1]++;
                     // Adiciona as conexões nos vértices correspondentes na lista de adjacência
                     lista[stoi(line.substr(0, i)) - 1].push_back(stoi(line.substr(i + 1)) - 1);
@@ -65,7 +63,7 @@ private:
             }
         }
         arquivo.close();  // Fecha o arquivo
-        return lista;     // Retorna a lista de adjacência gerada
+        return lista;
     }
 
     // Função DFS iterativa usando lista de adjacência
@@ -149,7 +147,7 @@ public:
     double medianaGrau() {
         vector<int> copia = graus;
         sort(copia.begin(), copia.end());  // Ordena a lista de graus
-        //retorna o valor do meio da lista, ou a soma dos valores do meio dividido por 2, se
+        //retorna o valor do meio da lista, ou a soma dos valores do meio dividido por 2 se
         //o número de vértices for par
         if (numVertices % 2 == 0) {
             return (copia[numVertices / 2 - 1] + copia[numVertices / 2]) / 2.0;
@@ -160,10 +158,9 @@ public:
 
     // Função BFS que retorna o nível e o pai de cada vértice
     vector<vector<int>> BFS(int verticeInicial) {
-        vector<int> nivel(numVertices, -1);  // Nível de cada vértice
-        vector<int> pai(numVertices, -1);    // Pai de cada vértice
+        vector<int> nivel(numVertices, -1);  // Vetor com o nível de cada vértice
+        vector<int> pai(numVertices, -1);    // Vetor com o pai de cada vértice
         queue<int> fila;
-
         nivel[verticeInicial] = 0;
         fila.push(verticeInicial);
         //usa fila para fazer a BFS, adicionando os vizinhos do primeiro vértice da lista
@@ -206,9 +203,7 @@ public:
     vector<vector<int>> DFS(int verticeInicial) {
         vector<int> nivel(numVertices, -1);
         vector<int> pai(numVertices, -1);
-
         nivel[verticeInicial] = 0;
-
         if (usaMatriz) {
             DFSMatriz(verticeInicial, nivel, pai);  // Usa DFS com matriz
         } else {
@@ -224,7 +219,6 @@ public:
     int distancia(int partida, int chegada) {
         return BFS(partida)[0][chegada];
     }
-
     // Função para calcular o diâmetro do grafo
     int diametro() {
         //Executa a BFS em cada vértice e guarda a distância máxima
@@ -239,7 +233,6 @@ public:
         }
         return maxDistancia;
     }
-
     // Função para calcular uma aproximação do diâmetro
     int diametro_aprox() {
         //Calcula a aproximação do diâmetro executando o BFS duas vezes
@@ -261,10 +254,9 @@ public:
         }
         return maxDistancia;
     }
-
     // Função para calcular os componentes conexos do grafo
     list<vector<int>> compconexa() {
-        //Identifica e retorna todos os componentes conexos do grafo por meio de um ve
+        //Identifica e retorna todos os componentes conexos do grafo
         list<vector<int>> componentes;
         vector<int> vertices_compo(numVertices, 1);
         vector<vector<int>> arvore;
@@ -296,8 +288,7 @@ int main() {
     int numVertices, u, v;
     bool usaMatriz;
     string path;
-
-
+    
     cout << "Usar matriz de adjacencia: ";
     cin >> usaMatriz;
 
