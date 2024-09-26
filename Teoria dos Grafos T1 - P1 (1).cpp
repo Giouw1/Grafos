@@ -288,7 +288,9 @@ int main() {
     int numVertices, u, v;
     bool usaMatriz;
     string path;
-    
+    ofstream arvorefile("arvores.txt");
+    arvorefile << "Vértice  |  Nível  |  Pai\n";
+
     cout << "Usar matriz de adjacencia: ";
     cin >> usaMatriz;
 
@@ -299,14 +301,14 @@ int main() {
     chrono::duration<double> tempob;
     for (int i = 0; i< 100; i++){
         auto start = chrono::high_resolution_clock::now();
-        g.BFS(i);
+        vector<vector<int> = g.BFS(i);
         auto end = chrono::high_resolution_clock::now();
         tempob += end - start;
         auto start1 = chrono::high_resolution_clock::now();
-        g.DFS(i);
+        vector<vector<int> = g.DFS(i);
         auto end1 = chrono::high_resolution_clock::now();
         tempod += end1-start1;
-
+        for (int i = 0;i <numVertices;i++){arvorefile << "   " << i << "     |    " << g.BFS(a)[0][i] << "    |   " << g.BFS(a)[1][i] << "\n";}
     }
     cout << "Duração BFS: " << tempob.count() << endl;
     cout << "Duração DFS: " << tempod.count() << endl;
@@ -350,14 +352,6 @@ int main() {
     auto it = componentes.begin();
     for (int i = 0 ; i< componentes.size();i++){advance(it,i); outfile << "Componente "<< i <<" "<< (*it).size() << endl;}
     //Informação acima da outfile
-    int a = 0;
-    while(a < numVertices){
-    cout << "Árvore geradora a partir do vértice " << a+1 << '\n';
-    cout << "Vértice  |  Nível  |  Pai\n";
-    for (int i = 0; i < numVertices; i++) {
-        cout << "   " << i + 1 << "     |    " << g.BFS(a)[0][i] << "    |   " << g.BFS(a)[1][i] << "\n";
-    }
-    a++;
-    }
+
     return 0;
 }    
