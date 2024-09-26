@@ -1,7 +1,7 @@
 #include <bits/stdc++.h>  // Inclui todas as bibliotecas padrão do C++
-#include <chrono>         // Inclui bibliotecas para medir o tempo de execução
-#include <windows.h>      // Inclui funções específicas do Windows, como gerenciamento de processos
-#include <psapi.h>        // Para usar funções de informações sobre processos no Windows
+#include <chrono>
+#include <windows.h>
+#include <psapi.h>      
 
 using namespace std;
 
