@@ -550,6 +550,7 @@ public:
     }
     void printtree(int v){
         ofstream arvorefile("arvore.txt");
+        arvorefile<< "   " << "Vértice" << "     |    " << "Nível"<< "    |   " << "Pai" << "\n";
         vector<vector<int>> de = DFS(v);
         vector<vector<int>> be = BFS(v);
         for (int i = 0;i <numVertices;i++){
