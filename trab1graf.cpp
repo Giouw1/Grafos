@@ -234,7 +234,37 @@ public:
             return copia[numVertices / 2];
         }
     }
-
+    vector<vector<float>> dijkstra_matriz(int verticeInicial){
+        int v = verticeInicial; // v vai guardar o vértice que será analisado no dijkstra
+        vector<int> pai(numVertices,-1);
+        vector<int> descobertos(numVertices,0);
+        vector<int> explorado(numVertices,0);
+        vector<float> distancia(numVertices,100000000000000000000000000000);//distância de todos igual a "infinito"
+        pai[v] = v;
+        distancia[v] = 0;
+        while (true){
+            explorado[v] = 1
+            for(int j = 0; j < numVertices; j++){
+                if(matrizAdj[v][j] != 0 && explorado[j]!= 1){
+                    if(descobertos[j] != 1) descobertos[j] = 1;
+                    if(distancia[j] > (distancia[v] + matrizAdj[v][j])){distancia[j] = distancia[v] + matrizAdj[v][j];}
+                }
+            }
+            int menor_vertice = -1; //vai guardar o vértice com menor distância e não explorado
+            for(int i = 0; i < descobertos.size(); i++){
+                if(descobertos[i] == 1 && explorado[i] != 1){
+                    if(menor_vertice == -1) menor_vertice = i;
+                    else{
+                        if(distancia[menor_vertice] > distancia[i]){menor_vertice = i;}
+                    }
+                }
+            }
+            v = menor_vertice;
+            if(menor_vertice == -1) break; //significa que não tem mais vértices descobertos não explorados
+        }
+        vector<vector<float>> resultado = {pai,distancia};
+        return resultado;
+    }
     // Função BFS que retorna o nível e o pai de cada vértice
     vector<vector<int>> BFS(int verticeInicial) {
         vector<int> nivel(numVertices, -1);  // Vetor com o nível de cada vértice
