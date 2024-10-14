@@ -240,14 +240,17 @@ public:
         vector<int> descobertos(numVertices,0);
         vector<int> explorado(numVertices,0);
         vector<float> distancia(numVertices,100000000000000000000000000000);//distância de todos igual a "infinito"
-        pai[v] = v;
+        pai[v] = v; //pai do vertice inicial definido como ele mesmo
         distancia[v] = 0;
         while (true){
-            explorado[v] = 1
+            explorado[v] = 1;
             for(int j = 0; j < numVertices; j++){
                 if(matrizAdj[v][j] != 0 && explorado[j]!= 1){
                     if(descobertos[j] != 1) descobertos[j] = 1;
-                    if(distancia[j] > (distancia[v] + matrizAdj[v][j])){distancia[j] = distancia[v] + matrizAdj[v][j];}
+                    if(distancia[j] > (distancia[v] + matrizAdj[v][j])){
+                        distancia[j] = distancia[v] + matrizAdj[v][j];
+                        pai[j] = v;
+                    }
                 }
             }
             int menor_vertice = -1; //vai guardar o vértice com menor distância e não explorado
@@ -259,8 +262,8 @@ public:
                     }
                 }
             }
-            v = menor_vertice;
             if(menor_vertice == -1) break; //significa que não tem mais vértices descobertos não explorados
+            v = menor_vertice;
         }
         vector<vector<float>> resultado = {pai,distancia};
         return resultado;
