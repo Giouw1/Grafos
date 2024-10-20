@@ -239,7 +239,7 @@ public:
         vector<int> pai(numVertices,-1);
         vector<int> descobertos(numVertices,0);
         vector<int> explorado(numVertices,0);
-        vector<float> distancia(numVertices,100000000000000000000000000000);//distância de todos igual a "infinito"
+        vector<float> distancia(numVertices,numeric_limits<float>::infinity());//distância de todos igual a "infinito"
         pai[v] = v; //pai do vertice inicial definido como ele mesmo
         distancia[v] = 0;
         while (true){
