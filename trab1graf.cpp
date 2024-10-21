@@ -19,7 +19,7 @@ private:
     // Função para fazer subir elementos e balancear o heap
     void subir(int i) {
         while (i > 1 && heap[i] < heap[i / 2]) {
-            // trocar o qtdento com o pai
+            // trocar o elemento com o pai
             trocar(i, i / 2);
             i = i / 2;
         }
@@ -30,15 +30,12 @@ private:
             int esq = 2 * i;
             int dir = 2 * i + 1;
             int menor = esq;
-            
             if (dir <= qtd && heap[dir] < heap[esq]) {
                 menor = dir;
             }
-
             if (heap[i] <= heap[menor]) {
                 break;
             }
-
             trocar(i, menor);
             i = menor;
         }
@@ -76,12 +73,10 @@ public:
         if (indiceMapa.find(velhaKey) == indiceMapa.end()) {
             throw runtime_error("Chave nao encontrada");
         }
-
         int index = indiceMapa[velhaKey];
         heap[index] = novaKey;
         indiceMapa.erase(velhaKey);
         indiceMapa[novaKey] = index;
-
         // Ajusta o heap
         if (novaKey < velhaKey) {
             subir(index);
