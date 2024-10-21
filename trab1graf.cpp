@@ -10,13 +10,13 @@ private:
     vector<int> heap;  // Armazena os qtdentos do heap
     unordered_map<int, int> indiceMapa;  // Mapeia chaves para seus índices no heap
     int qtd;  // Quantidade de elementos no heap
-    // troca os qtdentos no heap e atualiza o indiceMapa, para praticidade
+    // troca os elementos no heap e atualiza o indiceMapa, para praticidade
     void trocar(int i, int j) {
         swap(heap[i], heap[j]);
         indiceMapa[heap[i]] = i;
         indiceMapa[heap[j]] = j;
     }
-    // Função para fazer subir qtdento e balancear o heap
+    // Função para fazer subir elementos e balancear o heap
     void subir(int i) {
         while (i > 1 && heap[i] < heap[i / 2]) {
             // trocar o qtdento com o pai
@@ -24,7 +24,7 @@ private:
             i = i / 2;
         }
     }
-    // Função para fazer descer qtdento e balancear o heap
+    // Função para fazer descer elementos e balancear o heap
     void descer(int i) {
         while (2 * i <= qtd) {
             int esq = 2 * i;
@@ -51,7 +51,7 @@ public:
     Heap() : qtd(0) {
         heap.resize(2000);  // Começa com capacidade 2000 (index 0 não é usado)
     }
-    // Insere um novo qtdento no heap
+    // Insere um novo elemento no heap
     void insert(int key) {
         if (qtd + 1 == heap.size()) {
             redimensionar();
@@ -61,7 +61,7 @@ public:
         indiceMapa[key] = qtd;
         subir(qtd);
     }
-    // Remove o qtdento do topo (mínimo)
+    // Remove o elemento do topo (mínimo, pois é MinHeap)
     int extrairMin() {
         if (qtd == 0) throw runtime_error("Heap esta vazia");
         int minVal = heap[1];
@@ -71,7 +71,7 @@ public:
         indiceMapa.erase(minVal);
         return minVal;
     }
-    // Atualiza a chave de um qtdento no heap
+    // Atualiza a chave de um elemento no heap
     void atualizarChave(int velhaKey, int novaKey) {
         if (indiceMapa.find(velhaKey) == indiceMapa.end()) {
             throw runtime_error("Chave nao encontrada");
