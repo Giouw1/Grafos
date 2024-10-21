@@ -89,13 +89,13 @@ public:
             descer(index);
         }
     }
-    // Imprime o heap (para fins de depuração)
+    /* Imprime o heap (para checar resultados)
     void printHeap() {
         for (int i = 1; i <= qtd; i++) {
             cout << heap[i] << " ";
         }
         cout << endl;
-    }
+    }*/
 };
 
 class Grafo {
