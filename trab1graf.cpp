@@ -7,7 +7,7 @@ using namespace std;
 
 class Heap {
 private:
-    vector<int> heap;  // Armazena os qtdentos do heap
+    vector<int> heap;  // Armazena os elementos do heap
     unordered_map<int, int> indiceMapa;  // Mapeia chaves para seus índices no heap
     int qtd;  // Quantidade de elementos no heap
     // troca os elementos no heap e atualiza o indiceMapa, para praticidade
