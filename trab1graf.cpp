@@ -234,6 +234,38 @@ public:
             return copia[numVertices / 2];
         }
     }
+    vector<vector<float>> dijkstraHeap(int verticeInicial) {
+    vector<float> distancia(numVertices, numeric_limits<float>::infinity());
+    vector<float> pai(numVertices, -1);
+    vector<float> explorado(numVertices, 0);
+    int v = verticeInicial;
+
+    Heap heap(numVertices);
+    distancia[v] = 0;
+    heap.insert(0, v);  // Inserir o vértice inicial no heap com distância 0
+    
+    while (!heap.estaVazia()) {
+        v = heap.extrairMin();  // Extrai o vértice com a menor distância
+        explorado[v] = 1;
+        for (int k = 0; k < numVertices; k++) {
+            if (matrizAdjP[v][k] != 0 && !explorado[k]) {
+                float novaDist = distancia[v] + matrizAdjP[v][k];
+                if (novaDist < distancia[k]) {
+                    distancia[k] = novaDist;
+                    pai[k] = v;
+
+                    if (distancia[k] == numeric_limits<float>::infinity()) {
+                        heap.insert(novaDist, k);  // Insere no heap se for descoberto
+                    } else {
+                        heap.atualizarChave(k, novaDist);  // Atualiza se já está no heap
+                    }
+                }
+            }
+        }
+    }
+        vector<vector<float>> resultado = {pai,distancia};
+        return resultado;
+    }
     vector<vector<float>> dijkstra(int v){
         //Algo está dando errado, dar uma olhada por que o i não sai do 0
         //Amanha testar isso e lista
