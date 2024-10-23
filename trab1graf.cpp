@@ -2,7 +2,7 @@
 #include <chrono>
 #include <windows.h>
 #include <psapi.h>      
-
+#include "heap.cpp"
 using namespace std;
 
 class Grafo {
@@ -10,12 +10,14 @@ private:
     list<vector<int>> componenteconexa;  // Lista de componentes conexas
     int numVertices;     // Número de vértices
     int numArestas;      // Número de arestas
-    bool usaMatriz;      // Define se usa matriz de adjacência ou lista de adjacência
+    bool usaMatriz;
+    bool pesosNeg;      // Define se usa matriz de adjacência ou lista de adjacência
     vector<vector<int>> listaAdj;   // Lista de adjacência
     vector<vector<bool>> matrizAdj; // Matriz de adjacência
     vector<vector<vector<float>>> listaAdjP;
     vector<vector<float>> matrizAdjP;
     vector<int> graus;   // Vetor com os graus de cada vértice, onde o índice i terá o grau do vértice i+1
+
 
     // Função para gerar a matriz de adjacência a partir de um arquivo
     vector<vector<bool>> geraMatriz(string grafopath) {
@@ -73,6 +75,7 @@ private:
         string line;                 
         getline(arquivo, line);    
         numVertices = stoi(line);    // Converte a linha em número de vértices
+        pesosNeg = false;
         graus.resize(numVertices, 0);  // Inicializa o vetor de graus com todos os elementos iguais a 0
         vector<vector<float>> matrix(numVertices, vector<float>(numVertices, 0));  // Inicializa a matriz de adjacência
         // Processa cada linha do arquivo para preencher a matriz
@@ -85,7 +88,8 @@ private:
                         // Incrementa o grau dos vértices conectados
                         graus[stoi(line.substr(0, i)) - 1]++;
                         graus[stoi(line.substr(i + 1)) - 1]++;
-                        // Marca a conexão na matriz de adjacência
+                        if ((stof(line.substr(j+1))) < 0.0){pesosNeg = true;}
+                        // Marca a conexão na matriz  de adjacência
                         matrix[stoi(line.substr(0, i)) - 1][stoi(line.substr(i + 1,j)) - 1] = stof(line.substr(j+1));
                         matrix[stoi(line.substr(i + 1,j)) - 1][stoi(line.substr(0, i)) - 1] = stof(line.substr(j+1));
                         }
@@ -96,13 +100,14 @@ private:
         }
         arquivo.close();  // Fecha o arquivo
         return matrix;    
-        
+    
     }
     vector<vector<vector<float>>> geraListaPeso(string grafopath){
         ifstream arquivo(grafopath); // Abre o arquivo do grafo
         string line;                 
         getline(arquivo, line);    
-        numVertices = stoi(line);    // Converte a linha em número de vértices
+        numVertices = stoi(line);  
+        pesosNeg = false;  // Converte a linha em número de vértices
         graus.resize(numVertices, 0);  // Inicializa o vetor de graus com todos os elementos iguais a 0
         vector<vector<vector<float>>> listaAdjP(numVertices);  // Inicializa a lista de adjacencia, cada elemento dado um vértice (elemento do vetor maior) é um outro vértice e seu peso
         // Processa cada linha do arquivo para preencher a matriz
@@ -116,6 +121,7 @@ private:
                         graus[stoi(line.substr(0, i)) - 1]++;
                         graus[stoi(line.substr(i + 1)) - 1]++;
                         // Marca a conexão na matriz de adjacência
+                        if ((stof(line.substr(j+1))) < 0.0){pesosNeg = true;}
                         listaAdjP[stoi(line.substr(0, i)) - 1].push_back({stof(line.substr(i + 1,j)) - 1 , stof(line.substr(j+1))});
                         listaAdjP[stoi(line.substr(i + 1,j)) - 1].push_back({stof(line.substr(0, i)) - 1 , stof(line.substr(j+1))}); //Vou ter que lidar float to integer no caso dos vertices)
                         }
@@ -234,91 +240,7 @@ public:
             return copia[numVertices / 2];
         }
     }
-    vector<vector<float>> dijkstraHeap(int verticeInicial) {
-    vector<float> distancia(numVertices, numeric_limits<float>::infinity());
-    vector<float> pai(numVertices, -1);
-    vector<float> explorado(numVertices, 0);
-    int v = verticeInicial;
 
-    Heap heap(numVertices);
-    distancia[v] = 0;
-    heap.insert(0, v);  // Inserir o vértice inicial no heap com distância 0
-    
-    while (!heap.estaVazia()) {
-        v = heap.extrairMin();  // Extrai o vértice com a menor distância
-        explorado[v] = 1;
-        for (int k = 0; k < numVertices; k++) {
-            if (matrizAdjP[v][k] != 0 && !explorado[k]) {
-                float novaDist = distancia[v] + matrizAdjP[v][k];
-                if (novaDist < distancia[k]) {
-                    distancia[k] = novaDist;
-                    pai[k] = v;
-
-                    if (distancia[k] == numeric_limits<float>::infinity()) {
-                        heap.insert(novaDist, k);  // Insere no heap se for descoberto
-                    } else {
-                        heap.atualizarChave(k, novaDist);  // Atualiza se já está no heap
-                    }
-                }
-            }
-        }
-    }
-        vector<vector<float>> resultado = {pai,distancia};
-        return resultado;
-    }
-    vector<vector<float>> dijkstra(int v){
-        //Algo está dando errado, dar uma olhada por que o i não sai do 0
-        //Amanha testar isso e lista
-        if (pesosNeg == true){throw runtime_error("Não pode ter pesos negativos para dijkstra!");}
-        vector<float> distancias(numVertices, -1);
-        vector<float> pai(numVertices, -1);
-        vector<float> explorado(numVertices, 0);
-        float distmindavez = -1;
-        int da_vez;
-        distancias[v]= 0;
-        if (usaMatriz == 1){
-            for (int i = 0; i < numVertices; i++){
-                distmindavez = -1;
-                for (int j = 0 ; j < numVertices; j++){
-                    if((explorado[j] != 1) and (((distancias[j] < distmindavez) or (distmindavez == -1)) and (distancias[j] != -1))){distmindavez = distancias[j];da_vez = j;} //Se ainda não foi explorado, já foi descoberto, e for a menor distancia da vez, é o que vai ser explorado da vez
-                }
-                if (distmindavez == -1){break;} /* Se não achou uma nova distância mínima, já explorou todos que conseguiu, não é grafo conexo, e a componente conexa já foi percorrida*/
-                explorado[da_vez] = 1; //Está sendo explorado
-
-                for (int k = 0; k<numVertices; k++){
-                    if ((matrizAdjP[da_vez][k] != 0) and ( ( (distancias[da_vez] + matrizAdjP[da_vez][k])  <   distancias[k]) or (distancias[k] == -1) ) )  { //Se houver aresta, verificar as distancias
-                        distancias[k] = (distancias[da_vez] + matrizAdjP[da_vez][k]);
-                        pai[k] = da_vez;
-                    }
-                }
-                //Pegar o menor valor do vetor distancias que nao esteja explorado
-            }
-        }else{
-            for (int i = 0; i<numVertices;i++){
-                distmindavez = -1;
-                for (int j=0;j<numVertices;j++){
-                    if((explorado[j] != 1) and ((distancias[j] < distmindavez) or (distmindavez == -1)) and (distancias[j] != -1)){distmindavez = distancias[j];da_vez = j;}
-                }
-                
-                if (distmindavez == -1){break;}
-
-                explorado[da_vez] = 1; //Está sendo explorado
-
-                for (int k =0; k<listaAdjP[da_vez].size();k++){
-
-                    float vizinho = listaAdjP[da_vez][k][0];
-
-                    float pesovizinho = listaAdjP[da_vez][k][1];
-
-                    if(( ( (distancias[da_vez] + pesovizinho)< distancias[vizinho]) or (distancias[vizinho] == -1) ) ) {
-                        distancias[vizinho] = (distancias[da_vez] + pesovizinho);
-                        pai[vizinho] = da_vez;
-                    }
-                }
-            }
-        }
-    return {distancias,pai};
-};
     // Função BFS que retorna o nível e o pai de cada vértice
     vector<vector<int>> BFS(int verticeInicial) {
         vector<int> nivel(numVertices, -1);  // Vetor com o nível de cada vértice
@@ -458,8 +380,96 @@ public:
         this->componenteconexa = componentes;
         return componentes;
     }
-};
 
+
+    vector<vector<float>> dijkstra(int v){
+        //Algo está dando errado, dar uma olhada por que o i não sai do 0
+        //Amanha testar isso e lista
+        if (pesosNeg == true){throw runtime_error("Não pode ter pesos negativos para dijkstra!");}
+        vector<float> distancias(numVertices, -1);
+        vector<float> pai(numVertices, -1);
+        vector<float> explorado(numVertices, 0);
+        float distmindavez = -1;
+        int da_vez;
+        distancias[v]= 0;
+        if (usaMatriz == 1){
+            for (int i = 0; i < numVertices; i++){
+                distmindavez = -1;
+                for (int j = 0 ; j < numVertices; j++){
+                    if((explorado[j] != 1) and (((distancias[j] < distmindavez) or (distmindavez == -1)) and (distancias[j] != -1))){distmindavez = distancias[j];da_vez = j;} //Se ainda não foi explorado, já foi descoberto, e for a menor distancia da vez, é o que vai ser explorado da vez
+                }
+                if (distmindavez == -1){break;} /* Se não achou uma nova distância mínima, já explorou todos que conseguiu, não é grafo conexo, e a componente conexa já foi percorrida*/
+                explorado[da_vez] = 1; //Está sendo explorado
+
+                for (int k = 0; k<numVertices; k++){
+                    if ((matrizAdjP[da_vez][k] != 0) and ( ( (distancias[da_vez] + matrizAdjP[da_vez][k])  <   distancias[k]) or (distancias[k] == -1) ) )  { //Se houver aresta, verificar as distancias
+                        distancias[k] = (distancias[da_vez] + matrizAdjP[da_vez][k]);
+                        pai[k] = da_vez;
+                    }
+                }
+                //Pegar o menor valor do vetor distancias que nao esteja explorado
+            }
+        }else{
+            for (int i = 0; i<numVertices;i++){
+                distmindavez = -1;
+                for (int j=0;j<numVertices;j++){
+                    if((explorado[j] != 1) and ((distancias[j] < distmindavez) or (distmindavez == -1)) and (distancias[j] != -1)){distmindavez = distancias[j];da_vez = j;}
+                }
+                
+                if (distmindavez == -1){break;}
+
+                explorado[da_vez] = 1; //Está sendo explorado
+
+                for (int k =0; k<listaAdjP[da_vez].size();k++){
+
+                    float vizinho = listaAdjP[da_vez][k][0];
+
+                    float pesovizinho = listaAdjP[da_vez][k][1];
+
+                    if(( ( (distancias[da_vez] + pesovizinho)< distancias[vizinho]) or (distancias[vizinho] == -1) ) ) {
+                        distancias[vizinho] = (distancias[da_vez] + pesovizinho);
+                        pai[vizinho] = da_vez;
+                    }
+                }
+            }
+        }
+    return {distancias,pai};
+};
+    //Retorna uma lista com o caminho mínimo até cada vértice, e uma lista pai.
+    //vector<vector<float>> dijkstraHeap(){}
+    vector<vector<float>> dijkstraHeap(int verticeInicial) {
+    vector<float> distancia(numVertices, numeric_limits<float>::infinity());
+    vector<float> pai(numVertices, -1);
+    vector<float> explorado(numVertices, 0);
+    int v = verticeInicial;
+
+    Heap heap(numVertices);
+    distancia[v] = 0;
+    heap.insert(0, v);  // Inserir o vértice inicial no heap com distância 0
+    
+    while (!heap.estaVazia()) {
+        v = heap.extrairMin();  // Extrai o vértice com a menor distância
+        explorado[v] = 1;
+        for (int k = 0; k < numVertices; k++) {
+            if (matrizAdjP[v][k] != 0 && !explorado[k]) {
+                float novaDist = distancia[v] + matrizAdjP[v][k];
+                if (novaDist < distancia[k]) {
+                    distancia[k] = novaDist;
+                    pai[k] = v;
+
+                    if (distancia[k] == numeric_limits<float>::infinity()) {
+                        heap.insert(novaDist, k);  // Insere no heap se for descoberto
+                    } else {
+                        heap.atualizarChave(k, novaDist);  // Atualiza se já está no heap
+                    }
+                }
+            }
+        }
+    }
+    return {distancia,pai};
+
+};
+};
 int main() {
     int numVertices, u, v;
     bool usaMatriz;
@@ -470,6 +480,7 @@ int main() {
     cout <<  "Com peso? (0/1)";
     cin >> peso;
     Grafo g("grafo_W_1.txt", usaMatriz, peso);
+    vector<vector<float>> aux = g.dijkstraHeap(0);
     //Script para o estudo de caso 1
 /*    chrono::duration<double> tempod;
     chrono::duration<double> tempob;
