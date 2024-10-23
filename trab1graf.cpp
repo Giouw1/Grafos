@@ -322,40 +322,59 @@ public:
             return copia[numVertices / 2];
         }
     }
-    vector<vector<float>> dijkstra_matriz(int verticeInicial){
-        int v = verticeInicial; // v vai guardar o vértice que será analisado no dijkstra
-        vector<int> pai(numVertices,-1);
-        vector<int> descobertos(numVertices,0);
-        vector<int> explorado(numVertices,0);
-        vector<float> distancia(numVertices,numeric_limits<float>::infinity());//distância de todos igual a "infinito"
-        pai[v] = v; //pai do vertice inicial definido como ele mesmo
-        distancia[v] = 0;
-        while (true){
-            explorado[v] = 1;
-            for(int j = 0; j < numVertices; j++){
-                if(matrizAdj[v][j] != 0 && explorado[j]!= 1){
-                    if(descobertos[j] != 1) descobertos[j] = 1;
-                    if(distancia[j] > (distancia[v] + matrizAdj[v][j])){
-                        distancia[j] = distancia[v] + matrizAdj[v][j];
-                        pai[j] = v;
+    vector<vector<float>> dijkstra(int v){
+        //Algo está dando errado, dar uma olhada por que o i não sai do 0
+        //Amanha testar isso e lista
+        if (pesosNeg == true){throw runtime_error("Não pode ter pesos negativos para dijkstra!");}
+        vector<float> distancias(numVertices, -1);
+        vector<float> pai(numVertices, -1);
+        vector<float> explorado(numVertices, 0);
+        float distmindavez = -1;
+        int da_vez;
+        distancias[v]= 0;
+        if (usaMatriz == 1){
+            for (int i = 0; i < numVertices; i++){
+                distmindavez = -1;
+                for (int j = 0 ; j < numVertices; j++){
+                    if((explorado[j] != 1) and (((distancias[j] < distmindavez) or (distmindavez == -1)) and (distancias[j] != -1))){distmindavez = distancias[j];da_vez = j;} //Se ainda não foi explorado, já foi descoberto, e for a menor distancia da vez, é o que vai ser explorado da vez
+                }
+                if (distmindavez == -1){break;} /* Se não achou uma nova distância mínima, já explorou todos que conseguiu, não é grafo conexo, e a componente conexa já foi percorrida*/
+                explorado[da_vez] = 1; //Está sendo explorado
+
+                for (int k = 0; k<numVertices; k++){
+                    if ((matrizAdjP[da_vez][k] != 0) and ( ( (distancias[da_vez] + matrizAdjP[da_vez][k])  <   distancias[k]) or (distancias[k] == -1) ) )  { //Se houver aresta, verificar as distancias
+                        distancias[k] = (distancias[da_vez] + matrizAdjP[da_vez][k]);
+                        pai[k] = da_vez;
+                    }
+                }
+                //Pegar o menor valor do vetor distancias que nao esteja explorado
+            }
+        }else{
+            for (int i = 0; i<numVertices;i++){
+                distmindavez = -1;
+                for (int j=0;j<numVertices;j++){
+                    if((explorado[j] != 1) and ((distancias[j] < distmindavez) or (distmindavez == -1)) and (distancias[j] != -1)){distmindavez = distancias[j];da_vez = j;}
+                }
+                
+                if (distmindavez == -1){break;}
+
+                explorado[da_vez] = 1; //Está sendo explorado
+
+                for (int k =0; k<listaAdjP[da_vez].size();k++){
+
+                    float vizinho = listaAdjP[da_vez][k][0];
+
+                    float pesovizinho = listaAdjP[da_vez][k][1];
+
+                    if(( ( (distancias[da_vez] + pesovizinho)< distancias[vizinho]) or (distancias[vizinho] == -1) ) ) {
+                        distancias[vizinho] = (distancias[da_vez] + pesovizinho);
+                        pai[vizinho] = da_vez;
                     }
                 }
             }
-            int menor_vertice = -1; //vai guardar o vértice com menor distância e não explorado
-            for(int i = 0; i < descobertos.size(); i++){
-                if(descobertos[i] == 1 && explorado[i] != 1){
-                    if(menor_vertice == -1) menor_vertice = i;
-                    else{
-                        if(distancia[menor_vertice] > distancia[i]){menor_vertice = i;}
-                    }
-                }
-            }
-            if(menor_vertice == -1) break; //significa que não tem mais vértices descobertos não explorados
-            v = menor_vertice;
         }
-        vector<vector<float>> resultado = {pai,distancia};
-        return resultado;
-    }
+    return {distancias,pai};
+};
     // Função BFS que retorna o nível e o pai de cada vértice
     vector<vector<int>> BFS(int verticeInicial) {
         vector<int> nivel(numVertices, -1);  // Vetor com o nível de cada vértice
