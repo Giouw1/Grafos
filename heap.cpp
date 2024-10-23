@@ -4,18 +4,20 @@ using namespace std;
 
 class Heap {
 private:
-    vector<int> heap;  // Armazena os elementos do heap
-    unordered_map<int, int> indiceMapa;  // Mapeia chaves para seus índices no heap
+    // Mapeia chaves para seus índices no heap
     int qtd = 0;  // Quantidade de elementos no heap
+    int numVert;
+    vector<vector<int>> heap{numVert, vector<int>(2)};// Armazena os elementos do heap: heap [0] é a chave, heap [1] é o vértice/índice
     // troca os elementos no heap e atualiza o indiceMapa, para praticidade
     void trocar(int i, int j) {
         swap(heap[i], heap[j]);
-        indiceMapa[heap[i]] = i;
-        indiceMapa[heap[j]] = j;
+        indiceMapa[heap[i][1]] = i;
+        indiceMapa[heap[j][1]] = j;
     }
+
     // Função para fazer subir elementos e balancear o heap
     void subir(int i) {
-        while (i > 1 && heap[i] < heap[i / 2]) {
+        while (i > 1 && heap[i][0] < heap[i / 2][0]) {
             // trocar o elemento com o pai
             trocar(i, i / 2);
             i = i / 2;
@@ -27,10 +29,10 @@ private:
             int esq = 2 * i;
             int dir = 2 * i + 1;
             int menor = esq;
-            if (dir <= qtd && heap[dir] < heap[esq]) {
+            if (dir <= qtd && heap[dir][0] < heap[esq][0]) {
                 menor = dir;
             }
-            if (heap[i] <= heap[menor]) {
+            if (heap[i][0] <= heap[menor][0]) {
                 break;
             }
             trocar(i, menor);
@@ -41,9 +43,12 @@ private:
     void redimensionar() {
         heap.resize(heap.size() * 2);
     }
-public:
+public: 
+    vector<int> indiceMapa{numVert};
     Heap(int n) : qtd(0) {
         heap.resize(n);
+        numVert = n;
+      
     }
     // Insere um novo elemento no heap
     void insert(int chave, int index) {
@@ -51,8 +56,8 @@ public:
             redimensionar();
         }
         qtd++;
-        heap[qtd] = chave;
-        indiceMapa[index] = chave;
+        heap[qtd] = {chave,index};
+        indiceMapa[index] = qtd;
         subir(qtd);
     }
     // Remove o elemento do topo (mínimo, pois é MinHeap)
@@ -62,27 +67,23 @@ public:
     }
     int extrairMin() {
         if (qtd == 0) throw runtime_error("Heap esta vazia");
-        int minVal = heap[1];
+        int minVal = heap[1][0];
         if(qtd != 1) trocar(1, qtd);
         qtd--;
         descer(1);
-        indiceMapa.erase(minVal);
         return minVal;
     }
     // Atualiza a chave de um elemento no heap
-    void atualizarChave(int velhaKey, int novaKey) {
-        if (indiceMapa.find(velhaKey) == indiceMapa.end()) {
-            throw runtime_error("Chave nao encontrada");
-        }
-        int index = indiceMapa[velhaKey];
-        heap[index] = novaKey;
-        indiceMapa.erase(velhaKey);
-        indiceMapa[novaKey] = index;
+    void atualizarChave(int indice, int novaChave) {
+        int posicao = indiceMapa[indice];
+        int velhaChave = heap[posicao][0];
+        if (indice != heap[posicao][1]){throw runtime_error("Deu Merda");}
+        heap[posicao][1] = novaChave;
         // Ajusta o heap
-        if (novaKey < velhaKey) {
-            subir(index);
+        if (novaChave < velhaChave) {
+            subir(posicao);
         } else {
-            descer(index);
+            descer(posicao);
         }
     }
     /* Imprime o heap (para checar resultados)
@@ -93,6 +94,3 @@ public:
         cout << endl;
     }*/
 };
-int main(){
-    return 0 ;
-}
