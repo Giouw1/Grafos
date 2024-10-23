@@ -43,7 +43,7 @@ private:
     }
 public:
     Heap(int n) : qtd(0) {
-        heap.resize(n);  // Começa com capacidade 2000 (index 0 não é usado)
+        heap.resize(n);
     }
     // Insere um novo elemento no heap
     void insert(int chave, int index) {
