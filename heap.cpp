@@ -15,21 +15,20 @@ private:
         indiceMapa[heap[j][1]] = j;
     }
 
-    // Função para fazer subir elementos e balancear o heap
+    // Função para fazer subir elementos e balancear o heap Não sei pq i-1, mas é assim que se faz para heaps que começam no índice 0 (que é o caso)
     void subir(int i) {
-        while (i > 1 && heap[i][0] < heap[i / 2][0]) {
-            // trocar o elemento com o pai
-            trocar(i, i / 2);
-            i = i / 2;
+        while (i > 0 && heap[i][0] < heap[( i - 1 ) / 2][0]) {
+            trocar(i, ( i - 1) / 2);
+            i = ( i - 1 ) / 2;
         }
     }
     // Função para fazer descer elementos e balancear o heap
     void descer(int i) {
-        while (2 * i <= qtd) {
-            int esq = 2 * i;
-            int dir = 2 * i + 1;
+        while (2 * i + 1 < qtd) {
+            int esq = 2 * i+1;
+            int dir = 2 * i + 2;
             int menor = esq;
-            if (dir <= qtd && heap[dir][0] < heap[esq][0]) {
+            if (dir < qtd && heap[dir][0] < heap[esq][0]) {
                 menor = dir;
             }
             if (heap[i][0] <= heap[menor][0]) {
@@ -45,40 +44,38 @@ private:
     }
 public: 
     vector<int> indiceMapa{numVert};
-    Heap(int n) : qtd(0) {
-        heap.resize(n);
+    Heap(int n) : qtd(-1) {
         numVert = n;
-      
+        heap.resize(n);      
     }
     // Insere um novo elemento no heap
     void insert(int chave, int index) {
-        if (qtd + 1 == heap.size()) {
+        qtd++;
+        if (qtd > heap.size()-1) {
             redimensionar();
         }
-        qtd++;
         heap[qtd] = {chave,index};
         indiceMapa[index] = qtd;
         subir(qtd);
     }
-    // Remove o elemento do topo (mínimo, pois é MinHeap)
     bool estaVazia(){
-        if(qtd == 0)return true;
+        if(qtd == -1)return true;
         return false;
     }
+    // Remove o elemento do topo (mínimo, pois é MinHeap), e retorna o valor dele(índice)
     int extrairMin() {
-        if (qtd == 0) throw runtime_error("Heap esta vazia");
-        int minVal = heap[1][0];
-        if(qtd != 1) trocar(1, qtd);
+        if (qtd == -1) throw runtime_error("Heap esta vazia");
+        int minVal = heap[0][1];
+        if(qtd != 0) trocar(0, qtd);
         qtd--;
-        descer(1);
+        descer(0);
         return minVal;
     }
     // Atualiza a chave de um elemento no heap
     void atualizarChave(int indice, int novaChave) {
         int posicao = indiceMapa[indice];
         int velhaChave = heap[posicao][0];
-        if (indice != heap[posicao][1]){throw runtime_error("Deu Merda");}
-        heap[posicao][1] = novaChave;
+        heap[posicao][0] = novaChave;
         // Ajusta o heap
         if (novaChave < velhaChave) {
             subir(posicao);
@@ -94,3 +91,13 @@ public:
         cout << endl;
     }*/
 };
+/*int main(){
+    Heap heapo(6);
+    for (int i = 0;i<6; i++){
+        heapo.insert(i,i);
+    }
+    heapo.atualizarChave(3,4);
+    heapo.extrairMin();
+    heapo.insert(7,7);
+    return 0;
+}*/
