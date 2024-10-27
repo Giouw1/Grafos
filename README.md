@@ -1,0 +1,1 @@
+Para a parte dois do trabalho, implementamos a nossa própria classe heap, contida no arquivo trabalho_parte_2, e a seguir da implementação, o código da classe grafo, com o mesmo conteúdo da classe anterior, adicionando as funções de dijkstra e de mapeamento de nomes à vértices.
