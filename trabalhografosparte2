@@ -1,0 +1,710 @@
+#include <bits/stdc++.h>  // Inclui todas as bibliotecas padrão do C++
+#include <chrono>
+#include <windows.h>
+#include <psapi.h>     
+#include <random> 
+using namespace std;
+
+#include <bits/stdc++.h>  // Inclui todas as bibliotecas padrão do C++
+
+using namespace std;
+//Aqui tem a definição da classe heap que foi implementada por nós mesmos
+class heap {
+private:
+    // Mapeia chaves para seus índices no heap
+    int qtd = 0;  // Quantidade de elementos no heap
+    int numVert;
+    vector<int> indiceMapa;
+    vector<pair<float,int>> heapo{static_cast<size_t>(numVert)};// Armazena os elementos do heap: heap [0] é a chave, heap [1] é o vértice/índice
+    // troca os elementos no heap e atualiza o indiceMapa, para praticidade
+    void trocar(int i, int j) {
+        swap(heapo[i], heapo[j]);
+        indiceMapa[heapo[i].second] = i;
+        indiceMapa[heapo[j].second] = j;
+    }
+
+    // Função para fazer subir elementos e balancear o heap Não sei pq i-1, mas é assim que se faz para heaps que começam no índice 0 (que é o caso)
+    void subir(int i) {
+        while (i > 0 && heapo[i].first < heapo[( i - 1 ) / 2].first) {
+            trocar(i, ( i - 1) / 2);
+            i = ( i - 1 ) / 2;
+        }
+    }
+    // Função para fazer descer elementos e balancear o heap
+    void descer(int i) {
+        while (2 * i + 1 < qtd) {
+            int esq = 2 * i+1;
+            int dir = 2 * i + 2;
+            int menor = esq;
+            if (dir < qtd && heapo[dir].first < heapo[esq].first) {
+                menor = dir;
+            }
+            if (heapo[i].first <= heapo[menor].first) {
+                break;
+            }
+            trocar(i, menor);
+            i = menor;
+        }
+    }
+    // Redimensiona o array do heap dobrando sua capacidade (precisa ou inicializa direto com o número de vértices?)
+
+public: 
+    heap(int n) : qtd(0), numVert(n), indiceMapa(n) {
+        heapo.resize(n);      
+    }
+    // Insere um novo elemento no heap
+    void insert(float chave, int index) {
+        if (qtd > heapo.size()-1) {
+            throw runtime_error("Estourou o tamanho");
+        }
+        heapo[qtd] = {chave,index};
+        indiceMapa[index] = qtd;
+        subir(qtd);
+        qtd++;
+    }
+    bool estaVazia(){
+        if(qtd == 0)return true;
+        return false;
+    }
+    // Remove o elemento do topo (mínimo, pois é MinHeap), e retorna o valor dele(índice)
+    int extrairMin() {
+        if (qtd == 0) throw runtime_error("Heap esta vazia");
+        int minVal = heapo[0].second;
+        trocar(0, qtd-1);
+        qtd--;
+        descer(0);
+        return minVal;
+    }
+    // Atualiza a chave de um elemento no heap
+    void atualizarChave(int indice, float novaChave) {
+        int posicao = indiceMapa[indice];
+        int velhaChave = heapo[posicao].first;
+        heapo[posicao].first = novaChave;
+        // Ajusta o heap
+        if (novaChave < velhaChave) {
+            subir(posicao);
+        } else {
+            descer(posicao);
+        }
+    }
+    /* Imprime o heap (para checar resultados)
+    void printHeap() {
+        for (int i = 1; i <= qtd; i++) {
+            cout << heap[i] << " ";
+        }
+        cout << endl;
+    }*/
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//Agora, lidando com o grafo diretamente
+class Grafo {
+private:
+    list<vector<int>> componenteconexa;  // Lista de componentes conexas
+    int numVertices;     // Número de vértices
+    int numArestas;      // Número de arestas
+    bool usaMatriz;
+    bool pesosNeg;      // Define se usa matriz de adjacência ou lista de adjacência
+    vector<vector<int>> listaAdj;   // Lista de adjacência
+    vector<vector<bool>> matrizAdj; // Matriz de adjacência
+    vector<vector<pair<int,double>>> listaAdjP;
+    vector<vector<double>> matrizAdjP;
+    vector<int> graus;   // Vetor com os graus de cada vértice, onde o índice i terá o grau do vértice i+1
+
+
+    // Função para gerar a matriz de adjacência a partir de um arquivo
+    vector<vector<bool>> geraMatriz(string grafopath) {
+        ifstream arquivo(grafopath); // Abre o arquivo do grafo
+        string line;                 
+        getline(arquivo, line);    
+        numVertices = stoi(line);    // Converte a linha em número de vértices
+        graus.resize(numVertices, 0);  // Inicializa o vetor de graus com todos os elementos iguais a 0
+        vector<vector<bool>> matrix(numVertices, vector<bool>(numVertices, 0));  // Inicializa a matriz de adjacência
+        // Processa cada linha do arquivo para preencher a matriz
+        while (getline(arquivo, line)) {
+            for (int i = 0; i < line.length(); i++) {
+                if (line[i] == ' ') {  // Identifica a separação entre vértices conectados
+                    this->numArestas++;  // Incrementa o número de arestas
+                    // Incrementa o grau dos vértices conectados
+                    graus[stoi(line.substr(0, i)) - 1]++;
+                    graus[stoi(line.substr(i + 1)) - 1]++;
+                    // Marca a conexão na matriz de adjacência
+                    matrix[stoi(line.substr(0, i)) - 1][stoi(line.substr(i + 1)) - 1] = 1;
+                    matrix[stoi(line.substr(i + 1)) - 1][stoi(line.substr(0, i)) - 1] = 1;
+                }
+            }
+        }
+        arquivo.close();  // Fecha o arquivo
+        return matrix;    
+    }
+//mudar o dfs e mexer no geralista, depois disso pensar no dijkstra
+    // Função para gerar a lista de adjacência a partir de um arquivo
+    vector<vector<int>> geraLista(string grafopath) {
+        ifstream arquivo(grafopath);  // Abre o arquivo do grafo
+        string line;
+        getline(arquivo, line);
+        numVertices = stoi(line);  // Converte a primeira linha no número de vértices
+        graus.resize(numVertices, 0);  // Inicializa o vetor de graus
+        vector<vector<int>> lista(numVertices);  // Inicializa a lista de adjacência
+        // Processa cada linha do arquivo para preencher a lista de adjacência
+        while (getline(arquivo, line)) {
+            for (int i = 0; i < line.length(); i++) {
+                if (line[i] == ' ') {
+                    this->numArestas++;  // Incrementa o número de arestas
+                    graus[stoi(line.substr(0, i)) - 1]++; //Incrementa o grau dos vértices lidos
+                    graus[stoi(line.substr(i + 1)) - 1]++;
+                    // Adiciona as conexões nos vértices correspondentes na lista de adjacência
+                    lista[stoi(line.substr(0, i)) - 1].push_back(stoi(line.substr(i + 1)) - 1);
+                    lista[stoi(line.substr(i + 1)) - 1].push_back(stoi(line.substr(0, i)) - 1);
+                }
+            }
+        }
+        arquivo.close();  // Fecha o arquivo
+        return lista;
+    }
+
+    vector<vector<double>> geraMatrizPeso(string grafopath){
+        ifstream arquivo(grafopath); // Abre o arquivo do grafo
+        string line;                 
+        getline(arquivo, line);    
+        numVertices = stoi(line);    // Converte a linha em número de vértices
+        pesosNeg = false;
+        graus.resize(numVertices, 0);  // Inicializa o vetor de graus com todos os elementos iguais a 0
+        vector<vector<double>> matrix(numVertices, vector<double>(numVertices, 0));  // Inicializa a matriz de adjacência
+        // Processa cada linha do arquivo para preencher a matriz
+        while (getline(arquivo, line)) {
+            for (int i = 0; i < line.length(); i++) {
+                if (line[i] == ' ') {  // Identifica a separação entre vértices conectados
+                for (int j = i+1; j<line.length(); j++){
+                    if (line[j] == ' '){
+                        this->numArestas++;  // Incrementa o número de arestas
+                        // Incrementa o grau dos vértices conectados
+                        graus[stoi(line.substr(0, i)) - 1]++;
+                        graus[stoi(line.substr(i + 1)) - 1]++;
+                        if ((stod(line.substr(j+1))) < 0.0){pesosNeg = true;}
+                        // Marca a conexão na matriz  de adjacência
+                        matrix[stoi(line.substr(0, i)) - 1][stoi(line.substr(i + 1,j)) - 1] = stod(line.substr(j+1));
+                        matrix[stoi(line.substr(i + 1,j)) - 1][stoi(line.substr(0, i)) - 1] = stod(line.substr(j+1));
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+        arquivo.close();  // Fecha o arquivo
+        return matrix;    
+    
+    }
+    vector<vector<pair<int,double>>> geraListaPeso(string grafopath){
+        ifstream arquivo(grafopath); // Abre o arquivo do grafo
+        string line;                 
+        getline(arquivo, line);    
+        numVertices = stoi(line);  
+        pesosNeg = false;  // Converte a linha em número de vértices
+        graus.resize(numVertices, 0);  // Inicializa o vetor de graus com todos os elementos iguais a 0
+        vector<vector<pair<int,double>>> listaAdjP(numVertices);  // Inicializa a lista de adjacencia, cada elemento dado um vértice (elemento do vetor maior) é um outro vértice e seu peso
+        // Processa cada linha do arquivo para preencher a matriz
+        while (getline(arquivo, line)) {
+            for (int i = 0; i < line.length(); i++) {
+                if (line[i] == ' ') {  // Identifica a separação entre vértices conectados
+                for (int j = i+1; j<line.length(); j++){
+                    if (line[j] == ' '){
+                        this->numArestas++;  // Incrementa o número de arestas
+                        // Incrementa o grau dos vértices conectados
+                        graus[stoi(line.substr(0, i)) - 1]++;
+                        graus[stoi(line.substr(i + 1)) - 1]++;
+                        // Marca a conexão na matriz de adjacência
+                        if ((stof(line.substr(j+1))) < 0.0){pesosNeg = true;}
+                        listaAdjP[stoi(line.substr(0, i)) - 1].push_back({stof(line.substr(i + 1,j)) - 1 , stod(line.substr(j+1))});
+                        listaAdjP[stoi(line.substr(i + 1,j)) - 1].push_back({stof(line.substr(0, i)) - 1 , stod(line.substr(j+1))}); //Vou ter que lidar float to integer no caso dos vertices)
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+        arquivo.close();  // Fecha o arquivo
+        return listaAdjP;    
+    }
+
+
+    // Ver se pode mexer na forma que coloca na stack
+    // Função DFS iterativa usando lista de adjacência
+    void DFSLista(int v, vector<int>& nivel, vector<int>& pai) {
+        vector<int> pilha;  // Pilha para a DFS
+        int da_vez;
+        vector<int> visitado (numVertices,-1);
+        pilha.push_back(v);
+        while (!pilha.empty()) {
+            da_vez = pilha.back();
+            pilha.pop_back();
+            if (visitado[da_vez]== 1){continue; // Evitar ficar "revisitando"  vértices que foram descobertos mais de uma vez
+            }else{visitado[da_vez] = 1;}
+            for (int vizinho : listaAdj[da_vez]) {  // Percorre os vizinhos
+                if (visitado[vizinho] == -1) {  // Se o vizinho ainda não foi visitado
+                    pai[vizinho] = da_vez;   // Define o pai
+                    nivel[vizinho] = nivel[da_vez] + 1;  // Define o nível
+                    pilha.push_back(vizinho);  // Adiciona o vizinho à pilha
+                }
+            }
+        }
+    }
+
+    // Função DFS iterativa usando matriz de adjacência
+    void DFSMatriz(int v, vector<int>& nivel, vector<int>& pai) {
+        vector<int> visitado (numVertices,-1);
+        vector<int> pilha;  // Pilha para a DFS
+        int da_vez;
+        pilha.push_back(v);
+        while (!pilha.empty()) {
+            da_vez = pilha.back();
+            pilha.pop_back();
+            if (visitado[da_vez]== 1){continue; // Evitar ficar "revisitando"  vértices que foram descobertos mais de uma vez
+            }else{visitado[da_vez] = 1;}
+            for (int i = 0; i < numVertices; i++) {
+                if (matrizAdj[da_vez][i] && visitado[i] == -1) {  // Se o vizinho ainda não foi visitado
+                    pai[i] = da_vez;
+                    nivel[i] = nivel[da_vez] + 1;
+                    pilha.push_back(i);  // Adiciona o vizinho à pilha
+                }
+            }
+        }
+    }
+
+public:
+    // Construtor da classe Grafo
+     Grafo(string grafopath, bool matriz = false, bool usaPeso = false) : usaMatriz(matriz) {
+        if (usaPeso){
+            if (usaMatriz) {
+            matrizAdjP = geraMatrizPeso(grafopath);  // Gera matriz de adjacência
+            }else {
+            listaAdjP = geraListaPeso(grafopath);    // Gera lista de adjacência
+            }
+        }
+        else{
+            if (usaMatriz) {
+                matrizAdj = geraMatriz(grafopath);  // Gera matriz de adjacência
+            }else {
+            listaAdj = geraLista(grafopath);    // Gera lista de adjacência
+            }
+        }
+        SIZE_T memoryUsage = getMemoryUsage();  // Obtém uso de memória
+        cout << "Memória sendo utilizada: " << memoryUsage << " Bytes" << endl;
+    }
+
+    // Funções getter para número de vértices e arestas
+    int getNumVertices() const { return numVertices; }
+    int getNumArestas() const { return numArestas; }
+
+    // Funções para calcular o grau mínimo, máximo e médio
+    int grauMinimo() {
+        int grau_min = graus[0];
+        for (int i = 0; i < numVertices; i++) {
+            //percorre a lista de graus e guarda o menor
+            if (graus[i] < grau_min) grau_min = graus[i];
+        }
+        return grau_min;
+    }
+
+    int grauMaximo() {
+        int grau_max = graus[0];
+        for (int i = 0; i < numVertices; i++) {
+            //percorre a lista de graus e guarda o maior
+            if (graus[i] > grau_max) grau_max = graus[i];
+        }
+        return grau_max;
+    }
+
+    double grauMedio() {
+        double somaGraus = 0;
+        //soma todos os graus e divide pelo número de graus
+        for (int i = 0; i < numVertices; i++) somaGraus += graus[i];
+        return somaGraus / numVertices;
+    }
+    //função para cálculo da mediana dos graus
+    double medianaGrau() {
+        vector<int> copia = graus;
+        sort(copia.begin(), copia.end());  // Ordena a lista de graus
+        //retorna o valor do meio da lista, ou a soma dos valores do meio dividido por 2 se
+        //o número de vértices for par
+        if (numVertices % 2 == 0) {
+            return (copia[numVertices / 2 - 1] + copia[numVertices / 2]) / 2.0;
+        } else {
+            return copia[numVertices / 2];
+        }
+    }
+
+    // Função BFS que retorna o nível e o pai de cada vértice
+    vector<vector<int>> BFS(int verticeInicial) {
+        vector<int> nivel(numVertices, -1);  // Vetor com o nível de cada vértice
+        vector<int> pai(numVertices, -1);    // Vetor com o pai de cada vértice
+        queue<int> fila;
+        nivel[verticeInicial] = 0;
+        fila.push(verticeInicial);
+        //usa fila para fazer a BFS, adicionando os vizinhos do primeiro vértice da lista
+        // e removendo-o após todos os seus vizinhos terem sido visitados
+        while (!fila.empty()) {
+            int v = fila.front();
+            fila.pop();
+            //guarda o primeiro vértice da fila e o remove, para começar a percorrer os vizinhos
+            if (usaMatriz) {  // Se está usando matriz de adjacência
+                for (int i = 0; i < numVertices; ++i) {
+                    if (matrizAdj[v][i] == 1 && nivel[i] == -1) {
+                        //adiciona na fila caso não tenha sido visitado
+                        fila.push(i);
+                        nivel[i] = nivel[v] + 1;
+                        pai[i] = v;
+                    }
+                }
+            } else {  // Se está usando lista de adjacência
+                for (int vizinho : listaAdj[v]) {
+                    if (nivel[vizinho] == -1) {
+                        fila.push(vizinho);
+                        nivel[vizinho] = nivel[v] + 1;
+                        pai[vizinho] = v;
+                    }
+                }
+            }
+        }
+        vector<vector<int>> arvore = {nivel, pai};
+        return arvore;
+    }
+
+    // Função para obter o uso de memória
+    SIZE_T getMemoryUsage() {
+        PROCESS_MEMORY_COUNTERS memInfo;
+        GetProcessMemoryInfo(GetCurrentProcess(), &memInfo, sizeof(memInfo));
+        return memInfo.WorkingSetSize;  // Retorna o uso de memória em bytes
+    }
+
+    // Função DFS que retorna o nível e o pai de cada vértice
+    vector<vector<int>> DFS(int verticeInicial) {
+        vector<int> nivel(numVertices, -1);
+        vector<int> pai(numVertices, -1);
+        nivel[verticeInicial] = 0;
+        if (usaMatriz) {
+            DFSMatriz(verticeInicial, nivel, pai);  // Usa DFS com matriz
+        } else {
+            DFSLista(verticeInicial, nivel, pai);   // Usa DFS com lista
+        }
+        vector<vector<int>> arvore = {nivel, pai};
+        return arvore;
+    }
+
+    // Função para calcular a distância entre dois vértices usando BFS
+    //para calcular a distância, basta fazer a BFS de um elemento
+    //retornar o nível para o outro elemento, assim obtendo a distância mínima
+    int distancia(int partida, int chegada) {
+        return BFS(partida)[0][chegada];
+    }
+    // Função para calcular o diâmetro do grafo
+    int diametro() {
+        //Executa a BFS em cada vértice e guarda a distância máxima
+        int maxDistancia = 0;
+        for (int i = 0; i < numVertices; i++) {
+            vector<int> nivel = BFS(i)[0];
+            for (int dist : nivel) {
+                if (dist > maxDistancia) {
+                    maxDistancia = dist;
+                }
+            }
+        }
+        return maxDistancia;
+    }
+    // Função para calcular uma aproximação do diâmetro
+    int diametro_aprox() {
+        //Calcula a aproximação do diâmetro executando o BFS duas vezes
+        int maxDistancia = 0;
+        int vertice2 = 0;
+        vector<int> nivel = BFS(0)[0];
+        for (int i = 0; i < nivel.size(); i++) {
+            if (nivel[i] > maxDistancia) {
+                maxDistancia = nivel[i];
+                vertice2 = i;
+            }
+        }
+        vector<int> nivel2 = BFS(vertice2)[0];
+        for (int i = 0; i < nivel2.size(); i++) {
+            if (nivel[i] > maxDistancia) {
+                maxDistancia = nivel2[i];
+                vertice2 = i;
+            }
+        }
+        return maxDistancia;
+    }
+    void printtree(int v){
+        ofstream arvorefile("arvore.txt");
+        arvorefile<< "   " << "Vértice" << "     |    " << "Nível"<< "    |   " << "Pai" << "\n";
+        vector<vector<int>> de = DFS(v);
+        vector<vector<int>> be = BFS(v);
+        for (int i = 0;i <numVertices;i++){
+            arvorefile << "   " << i << "     |    " << be[0][i] << "    |   " << be[1][i] << "\n";
+            arvorefile << "   " << i << "     |    " << de[0][i] << "    |   " << de[1][i] << "\n";
+        }
+        arvorefile.close();
+
+
+    }
+    // Função para calcular os componentes conexos do grafo
+    list<vector<int>> compconexa() {
+        //Identifica e retorna todos os componentes conexos do grafo
+        list<vector<int>> componentes;
+        vector<int> vertices_compo(numVertices, 1);
+        vector<vector<int>> arvore;
+        for (int i = 0; i < numVertices; i++) {
+            if (vertices_compo[i] == 0) continue;
+            vector<int> comp;
+            arvore = BFS(i);
+            for (int j = 0; j < arvore[0].size(); j++) {
+                if (arvore[0][j] != -1) {
+                    vertices_compo[j] = 0;
+                    comp.push_back(j);
+                }
+            }
+            auto it = componentes.begin();
+            while (it != componentes.end()) {
+                if (it->size() > comp.size()) {
+                    break;
+                }
+                ++it;
+            }
+            componentes.insert(it, comp);
+        }
+        this->componenteconexa = componentes;
+        return componentes;
+    }
+
+
+    vector<vector<float>> dijkstra(int v){
+        //Algo está dando errado, dar uma olhada por que o i não sai do 0
+        //Amanha testar isso e lista
+        if (pesosNeg == true){throw runtime_error("Não pode ter pesos negativos para dijkstra!");}
+        vector<float> distancias(numVertices, -1);
+        vector<float> pai(numVertices, -1);
+        vector<float> explorado(numVertices, 0);
+        float distmindavez = -1;
+        int da_vez;
+        distancias[v]= 0;
+        //Dijkstra para matriz
+        if (usaMatriz == 1){
+            for (int i = 0; i < numVertices; i++){
+                distmindavez = -1;
+                for (int j = 0 ; j < numVertices; j++){
+                    if((explorado[j] != 1) and (((distancias[j] < distmindavez) or (distmindavez == -1)) and (distancias[j] != -1))){distmindavez = distancias[j];da_vez = j;} //Se ainda não foi explorado, já foi descoberto, e for a menor distancia da vez, é o que vai ser explorado da vez
+                }
+                if (distmindavez == -1){break;} /* Se não achou uma nova distância mínima, já explorou todos que conseguiu, não é grafo conexo, e a componente conexa já foi percorrida*/
+                explorado[da_vez] = 1; //Está sendo explorado
+
+                for (int k = 0; k<numVertices; k++){
+                    if ((matrizAdjP[da_vez][k] != 0) and ( ( (distancias[da_vez] + matrizAdjP[da_vez][k])  <   distancias[k]) or (distancias[k] == -1) ) )  { //Se houver aresta, verificar as distancias
+                        distancias[k] = (distancias[da_vez] + matrizAdjP[da_vez][k]);
+                        pai[k] = da_vez;
+                    }
+                }
+                //Pegar o menor valor do vetor distancias que nao esteja explorado
+            }
+        }
+        //Dijkstra para L. Adjacência
+        else{
+        for (int i = 0; i<numVertices;i++){
+                distmindavez = -1;
+                for (int j=0;j<numVertices;j++){
+                    if((explorado[j] != 1) and ((distancias[j] < distmindavez) or (distmindavez == -1)) and (distancias[j] != -1)){distmindavez = distancias[j];da_vez = j;}
+                }
+                
+                if (distmindavez == -1){break;}
+
+                explorado[da_vez] = 1; //Está sendo explorado
+
+                for (int k =0; k<listaAdjP[da_vez].size();k++){
+
+                    float vizinho = listaAdjP[da_vez][k].first;
+
+                    float pesovizinho = listaAdjP[da_vez][k].second;
+
+                    if(( ( (distancias[da_vez] + pesovizinho)< distancias[vizinho]) or (distancias[vizinho] == -1) ) ) {
+                        distancias[vizinho] = (distancias[da_vez] + pesovizinho);
+                        pai[vizinho] = da_vez;
+                        }
+                    }
+                }
+        }
+            
+    return {distancias,pai};
+};
+    //Retorna uma lista com o caminho mínimo até cada vértice, e uma lista pai.
+    //vector<vector<float>> dijkstraHeap(){}
+    vector<vector<float>> dijkstraHeap(int verticeInicial) {
+    vector<float> distancia(numVertices, numeric_limits<float>::infinity());
+    vector<float> pai(numVertices, -1);
+    vector<float> explorado(numVertices, 0);
+    int v = verticeInicial;
+
+    heap heape(numVertices);
+    distancia[v] = 0;
+    heape.insert(0, v);  // Inserir o vértice inicial no heap com distância 0
+    
+    if (usaMatriz == 1){
+        while (!heape.estaVazia()) {
+            v = heape.extrairMin();  // Extrai o vértice com a menor distância
+            explorado[v] = 1;
+            for (int k = 0; k < numVertices; k++) {
+                if (matrizAdjP[v][k] != 0 && (explorado[k] != 1)) {
+                    float novaDist = distancia[v] + matrizAdjP[v][k];
+                    if (novaDist < distancia[k]) {
+
+                        if (distancia[k] == numeric_limits<float>::infinity()) {
+                            distancia[k] = novaDist;
+                            pai[k] = v;
+                            heape.insert(novaDist, k);  // Insere no heap se for descoberto
+                        } else {
+                            distancia[k] = novaDist;
+                            pai[k] = v;
+                            heape.atualizarChave(k, novaDist);  // Atualiza se já está no heap
+                        }
+                    }
+                }
+                continue;
+            }
+        }
+    }
+    else{
+        int nodevizinho;
+        float peso_vizinho;
+        while (!heape.estaVazia()) {
+            v = heape.extrairMin();  // Extrai o vértice com a menor distância
+            explorado[v] = 1;
+            for (pair<int,float> vizinho : listaAdjP[v]) {
+                nodevizinho = vizinho.first;
+                peso_vizinho = vizinho.second ;
+                if (explorado[nodevizinho] != 1) {
+                    float novaDist = distancia[v] + peso_vizinho;
+                    if (novaDist < distancia[nodevizinho]) {
+
+                        if (distancia[nodevizinho] == numeric_limits<float>::infinity()) {
+                            distancia[nodevizinho] = novaDist;
+                            pai[nodevizinho] = v;
+                            heape.insert(novaDist, nodevizinho);  // Insere no heap se for descoberto
+                        } else {
+                            distancia[nodevizinho] = novaDist;
+                            pai[nodevizinho] = v;
+                            heape.atualizarChave(nodevizinho, novaDist);  // Atualiza se já está no heap
+                        }
+                    }
+                }
+                continue;
+            }
+        }
+    }
+    return {distancia,pai};
+    };
+    
+    unordered_map<string,int> mapeador_nome_vertice(string caminho) {
+        ifstream arquivo(caminho); // Abre o arquivo do grafo
+        string line;
+        unordered_map<string,int> nomes_map;
+        while (getline(arquivo, line)) {
+            for (int i = 0; i < line.length(); i++) {
+
+                if (line[i] == ','){
+                    nomes_map[line.substr(i+1)] = stoi(line.substr(0,i));
+                    break;
+                }
+                continue;
+            }
+        };
+        arquivo.close();
+        return nomes_map;
+    };
+    vector<int> caminhominimo(int v, vector<float> vetorpai){
+        vector<int> caminho;
+        int da_vez = v;
+        while(vetorpai[da_vez] != -1){
+            caminho.push_back(vetorpai[da_vez]);
+            da_vez = vetorpai[da_vez];
+            
+        }
+        return caminho;
+    }
+    
+    
+};
+int main() {
+    int numVertices, u, v;
+    bool usaMatriz;
+    bool peso;
+    bool mapeia;
+    vector<int> caminho;
+    vector<vector<float>> aux;
+    string path;
+    unordered_map<string,int> mapa;
+
+    //Obtenção dos dados, usando apenas lista de adjacencia, por questões de memória
+    Grafo g("grafo_W_2.txt", 0, 1);
+    cout << "Há mapeamento com nomes?";
+    cin >>mapeia;
+    if (mapeia == 0){
+        aux = g.dijkstra(9);
+        caminho = g.caminhominimo(19,aux[1]);
+        caminho = g.caminhominimo(29,aux[1]);
+        caminho = g.caminhominimo(39,aux[1]);
+        caminho = g.caminhominimo(49,aux[1]);
+        caminho = g.caminhominimo(59,aux[1]);
+    // K = 100
+    //Para gerar aleatoriedade com base em uma distribuição uniforme (probabilidade igual para todos)
+    random_device dev;
+    mt19937 rng(dev());
+    uniform_int_distribution<std::mt19937::result_type> dist(0,numVertices);
+    int verticei;
+    //Para contar os tempos das exeucções
+    chrono::duration<double> tempo;
+    chrono::duration<double> tempoheap;
+        for (int i = 0; i<100; i++){
+            verticei = dist(rng);
+            auto start = chrono::high_resolution_clock::now();
+            g.dijkstra(verticei);
+            auto end = chrono::high_resolution_clock::now();
+            tempo += end - start;
+            auto start1 = chrono::high_resolution_clock::now();
+            g.dijkstraHeap(verticei);
+            auto end1 = chrono::high_resolution_clock::now();
+            tempoheap += end1-start1;
+        }
+    
+    }
+    else{
+        mapa = g.mapeador_nome_vertice("rede_colaboracao_vertices.txt");
+    
+    aux = g.dijkstraHeap(mapa["Edsger W. Dijkstra"]-1);
+
+    cout << aux[0][mapa["Alan M. Turing"]-1]<< "\n";
+    //caminho = g.caminhominimo(mapa["Alan M. Turing"]-1, aux[1]);
+    cout << aux[0][mapa["J. B. Kruskal"]-1]<< "\n";
+    //caminho = g.caminhominimo(mapa["J. B. Kruskal"]-1, aux[1]);
+
+    cout << aux[0][mapa["Jon M. Kleinberg"]-1]<< "\n";
+    //caminho = g.caminhominimo(mapa["Jon M. Kleinberg"]-1, aux[1]);
+
+    cout << aux[0][mapa["Éva Tardos"]-1]<< "\n";
+    //caminho = g.caminhominimo(mapa["Éva Tardos"]-1, aux[1]);
+
+    cout << aux[0][mapa["Daniel R. Figueiredo"]-1] << "\n";
+    //caminho = g.caminhominimo(mapa["Daniel R. Figueiredo"]-1, aux[1]);
+    }
+    return 0;
+}     
