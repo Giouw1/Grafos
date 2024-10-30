@@ -78,7 +78,7 @@ public:
     // Atualiza a chave de um elemento no heap
     void atualizarChave(int indice, float novaChave) {
         int posicao = indiceMapa[indice];
-        int velhaChave = heapo[posicao].first;
+        float velhaChave = heapo[posicao].first;
         heapo[posicao].first = novaChave;
         // Ajusta o heap
         if (novaChave < velhaChave) {
@@ -122,8 +122,8 @@ private:
     bool pesosNeg;      // Define se usa matriz de adjacência ou lista de adjacência
     vector<vector<int>> listaAdj;   // Lista de adjacência
     vector<vector<bool>> matrizAdj; // Matriz de adjacência
-    vector<vector<pair<int,double>>> listaAdjP;
-    vector<vector<double>> matrizAdjP;
+    vector<vector<pair<int,float>>> listaAdjP;
+    vector<vector<float>> matrizAdjP;
     vector<int> graus;   // Vetor com os graus de cada vértice, onde o índice i terá o grau do vértice i+1
 
 
@@ -178,14 +178,14 @@ private:
         return lista;
     }
 
-    vector<vector<double>> geraMatrizPeso(string grafopath){
+    vector<vector<float>> geraMatrizPeso(string grafopath){
         ifstream arquivo(grafopath); // Abre o arquivo do grafo
         string line;                 
         getline(arquivo, line);    
         numVertices = stoi(line);    // Converte a linha em número de vértices
         pesosNeg = false;
         graus.resize(numVertices, 0);  // Inicializa o vetor de graus com todos os elementos iguais a 0
-        vector<vector<double>> matrix(numVertices, vector<double>(numVertices, 0));  // Inicializa a matriz de adjacência
+        vector<vector<float>> matrix(numVertices, vector<float>(numVertices, 0));  // Inicializa a matriz de adjacência
         // Processa cada linha do arquivo para preencher a matriz
         while (getline(arquivo, line)) {
             for (int i = 0; i < line.length(); i++) {
@@ -210,14 +210,14 @@ private:
         return matrix;    
     
     }
-    vector<vector<pair<int,double>>> geraListaPeso(string grafopath){
+    vector<vector<pair<int,float>>> geraListaPeso(string grafopath){
         ifstream arquivo(grafopath); // Abre o arquivo do grafo
         string line;                 
         getline(arquivo, line);    
         numVertices = stoi(line);  
         pesosNeg = false;  // Converte a linha em número de vértices
         graus.resize(numVertices, 0);  // Inicializa o vetor de graus com todos os elementos iguais a 0
-        vector<vector<pair<int,double>>> listaAdjP(numVertices);  // Inicializa a lista de adjacencia, cada elemento dado um vértice (elemento do vetor maior) é um outro vértice e seu peso
+        vector<vector<pair<int,float>>> listaAdjP(numVertices);  // Inicializa a lista de adjacencia, cada elemento dado um vértice (elemento do vetor maior) é um outro vértice e seu peso
         // Processa cada linha do arquivo para preencher a matriz
         while (getline(arquivo, line)) {
             for (int i = 0; i < line.length(); i++) {
@@ -330,14 +330,14 @@ public:
         return grau_max;
     }
 
-    double grauMedio() {
-        double somaGraus = 0;
+    float grauMedio() {
+        float somaGraus = 0;
         //soma todos os graus e divide pelo número de graus
         for (int i = 0; i < numVertices; i++) somaGraus += graus[i];
         return somaGraus / numVertices;
     }
     //função para cálculo da mediana dos graus
-    double medianaGrau() {
+    float medianaGrau() {
         vector<int> copia = graus;
         sort(copia.begin(), copia.end());  // Ordena a lista de graus
         //retorna o valor do meio da lista, ou a soma dos valores do meio dividido por 2 se
@@ -533,7 +533,7 @@ public:
 
                 for (int k =0; k<listaAdjP[da_vez].size();k++){
 
-                    float vizinho = listaAdjP[da_vez][k].first;
+                    int vizinho = listaAdjP[da_vez][k].first;
 
                     float pesovizinho = listaAdjP[da_vez][k].second;
 
@@ -591,7 +591,7 @@ public:
             explorado[v] = 1;
             for (pair<int,float> vizinho : listaAdjP[v]) {
                 nodevizinho = vizinho.first;
-                peso_vizinho = vizinho.second ;
+                peso_vizinho = vizinho.second;
                 if (explorado[nodevizinho] != 1) {
                     float novaDist = distancia[v] + peso_vizinho;
                     if (novaDist < distancia[nodevizinho]) {
@@ -614,22 +614,24 @@ public:
     return {distancia,pai};
     };
     
-    unordered_map<string,int> mapeador_nome_vertice(string caminho) {
+    pair<unordered_map<string,int>,unordered_map<int,string>> mapeador_nome_vertice(string caminho) {
         ifstream arquivo(caminho); // Abre o arquivo do grafo
         string line;
         unordered_map<string,int> nomes_map;
+        unordered_map<int,string> vert_map;
         while (getline(arquivo, line)) {
             for (int i = 0; i < line.length(); i++) {
 
                 if (line[i] == ','){
                     nomes_map[line.substr(i+1)] = stoi(line.substr(0,i));
+                    vert_map[stoi(line.substr(0,i))] = line.substr(i+1);
                     break;
                 }
                 continue;
             }
         };
         arquivo.close();
-        return nomes_map;
+        return {nomes_map,vert_map};
     };
     vector<int> caminhominimo(int v, vector<float> vetorpai){
         vector<int> caminho;
@@ -652,14 +654,17 @@ int main() {
     vector<int> caminho;
     vector<vector<float>> aux;
     string path;
-    unordered_map<string,int> mapa;
+    unordered_map<string,int> mapanomevert;
+    unordered_map<int,string> mapavertnome;
+    pair<unordered_map<string,int>,unordered_map<int,string>> mapa;
+
 
     //Obtenção dos dados, usando apenas lista de adjacencia, por questões de memória
-    Grafo g("grafo_W_2.txt", 0, 1);
+    Grafo g("grafo_W_3.txt", 0, 1);
     cout << "Há mapeamento com nomes?";
-    cin >>mapeia;
-    if (mapeia == 0){
-        aux = g.dijkstra(9);
+    cin >>mapeia; 
+    if (mapeia == 0){ 
+        aux = g.dijkstraHeap(9);
         caminho = g.caminhominimo(19,aux[1]);
         caminho = g.caminhominimo(29,aux[1]);
         caminho = g.caminhominimo(39,aux[1]);
@@ -667,13 +672,13 @@ int main() {
         caminho = g.caminhominimo(59,aux[1]);
     // K = 100
     //Para gerar aleatoriedade com base em uma distribuição uniforme (probabilidade igual para todos)
-    random_device dev;
+    random_device dev; 
     mt19937 rng(dev());
     uniform_int_distribution<std::mt19937::result_type> dist(0,numVertices);
     int verticei;
-    //Para contar os tempos das exeucções
-    chrono::duration<double> tempo;
-    chrono::duration<double> tempoheap;
+    //Para contar os tempos das execuções (Não conseguimos contar do grafo 3 para frente)
+        chrono::duration<float> tempo;
+        chrono::duration<float> tempoheap;
         for (int i = 0; i<100; i++){
             verticei = dist(rng);
             auto start = chrono::high_resolution_clock::now();
@@ -685,26 +690,42 @@ int main() {
             auto end1 = chrono::high_resolution_clock::now();
             tempoheap += end1-start1;
         }
-    
+    //cout << tempo.count() << "\n";
+    cout << tempoheap.count() << "\n";
     }
     else{
-        mapa = g.mapeador_nome_vertice("rede_colaboracao_vertices.txt");
-    
-    aux = g.dijkstraHeap(mapa["Edsger W. Dijkstra"]-1);
+    mapa = g.mapeador_nome_vertice("rede_colaboracao_vertices.txt");
+    mapanomevert = mapa.first;
+    mapavertnome = mapa.second;
+    aux = g.dijkstraHeap(mapanomevert["Edsger W. Dijkstra"]-1);
+    //Estamos somando 1 ao caminho[i] pois Dijkstra funciona de 0 até n-1, ao somar um, volta ao "normal" de 1 até n
+    cout << aux[0][mapanomevert["Alan M. Turing"]-1]<< "\n";
+    caminho = g.caminhominimo(mapanomevert["Alan M. Turing"]-1, aux[1]);
+    for (int i = 0; i< caminho.size();i++){
+        cout << mapavertnome[caminho[i]+1] << "\n";
+    }
 
-    cout << aux[0][mapa["Alan M. Turing"]-1]<< "\n";
-    //caminho = g.caminhominimo(mapa["Alan M. Turing"]-1, aux[1]);
-    cout << aux[0][mapa["J. B. Kruskal"]-1]<< "\n";
-    //caminho = g.caminhominimo(mapa["J. B. Kruskal"]-1, aux[1]);
+    cout << aux[0][mapanomevert["J. B. Kruskal"]-1]<< "\n";
+     caminho = g.caminhominimo(mapanomevert["J. B. Kruskal"]-1, aux[1]);
+    for (int i = 0; i< caminho.size();i++){
+        cout << mapavertnome[caminho[i]+1] << "\n";
+    }
 
-    cout << aux[0][mapa["Jon M. Kleinberg"]-1]<< "\n";
-    //caminho = g.caminhominimo(mapa["Jon M. Kleinberg"]-1, aux[1]);
-
-    cout << aux[0][mapa["Éva Tardos"]-1]<< "\n";
-    //caminho = g.caminhominimo(mapa["Éva Tardos"]-1, aux[1]);
-
-    cout << aux[0][mapa["Daniel R. Figueiredo"]-1] << "\n";
-    //caminho = g.caminhominimo(mapa["Daniel R. Figueiredo"]-1, aux[1]);
+    cout << aux[0][mapanomevert["Jon M. Kleinberg"]-1]<< "\n";
+    caminho = g.caminhominimo(mapanomevert["Jon M. Kleinberg"]-1, aux[1]);
+    for (int i = 0; i< caminho.size();i++){
+        cout << mapavertnome[caminho[i]+1] << "\n";
+    }
+    cout << aux[0][mapanomevert["Éva Tardos"]-1]<< "\n";
+    caminho = g.caminhominimo(mapanomevert["Éva Tardos"]-1, aux[1]);
+    for (int i = 0; i< caminho.size();i++){
+        cout << mapavertnome[caminho[i]+1] << "\n";
+    }
+    cout << aux[0][mapanomevert["Daniel R. Figueiredo"]-1] << "\n";
+    caminho = g.caminhominimo(mapanomevert["Daniel R. Figueiredo"]-1, aux[1]);
+    for (int i = 0; i< caminho.size();i++){
+        cout << mapavertnome[caminho[i]+1] << "\n";
+    }
     }
     return 0;
 }     
