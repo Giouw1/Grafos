@@ -792,6 +792,7 @@ public:
                     }
                 }                
             }
+            //Sabendo que a lógica de capacidade das arestas sempre é que original: c(e) - f(e) e reversa: f(e)
             //a capacidade da aresta utilizada sempre diminui: é a lógica do grafo residual: se for original, a usar aumenta o fluxo logo diminui sua capacidade. se for reversa, a usar reduz o fluxo logo sua capacidade
             for (pair<int,pair<int,int>>& aresta : graforesidual[saida]){
                     if (aresta.first == entrada and aresta.second.first == tipo){ //verifica o tipo para garantir a corretude da aresta
@@ -799,6 +800,8 @@ public:
                         break;
                     }
             }
+            //equivalentemente ao explicado anteriormente, a capacidade da aresta não usada sempre aumenta: é a lógica do grafo residual: se for a reversa, utilizou-se a original, o fluxo aumentou, logo a capacidade
+            //dessa aresta. Se for a original, utilizou-se a reversa, logo diminuiu-se o fluxo e consequentemente aumentou-se a capacidade dessa aresta.
             for (pair<int,pair<int,int>>& aresta : graforesidual[entrada]){
                     if (aresta.first == saida and aresta.second.first == tipo){ //verifica o tipo para garantir a corretude da aresta
                         aresta.second.second += gargalo;
