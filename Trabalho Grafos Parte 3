@@ -832,7 +832,7 @@ int main() {
     vector<vector<pair<int,pair<int,int>>>> graforesultado;
 
     //Obtenção dos dados, usando apenas lista de adjacencia, pelas exigências
-    Grafo g("grafo_rf_4.txt", 0, 1, 1,1);
+    Grafo g("grafo_rf_1.txt", 0, 1, 1, 1);
     tie(fluxomaximo,graforesultado) =g.fordfulkerso(0,1,1);
     cout << fluxomaximo << endl;
     random_device dev; 
