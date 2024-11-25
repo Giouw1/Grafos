@@ -838,13 +838,8 @@ int main() {
     Grafo g("grafo_rf_1.txt", 0, 1, 1, 1);
     tie(fluxomaximo,graforesultado) =g.fordfulkerso(0,1,1);
     cout << fluxomaximo << endl;
-    random_device dev; 
-    mt19937 rng(dev());
-    uniform_int_distribution<std::mt19937::result_type> dist(0,numVertices);
-    int verticei;
         chrono::duration<float> tempo;
         for (int i = 0; i<10; i++){
-            verticei = dist(rng);
             auto start = chrono::high_resolution_clock::now();
             g.fordfulkerso(0,1,0);
             auto end = chrono::high_resolution_clock::now();
