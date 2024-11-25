@@ -125,7 +125,7 @@ private:
     vector<vector<pair<int,float>>> listaAdjP;
     vector<vector<float>> matrizAdjP;
     vector<vector<pair<int,pair<int,int>>>> listafluxo;
-    vector<vector<pair<int,int>>> graforesidual; 
+    vector<vector<pair<int,pair<int,int>>>> graforesidual; 
     vector<int> graus; 
     bool dag;
     bool fluxo;
@@ -263,28 +263,29 @@ private:
         return listaAdjP;    
     }
     //gera a lista de fluxo a partir de um arquivo
-    pair<vector<vector<pair<int,pair<int,int>>>>,vector<vector<pair<int,int>>>> geraListaFluxo(string grafopath){
+    pair<vector<vector<pair<int,pair<int,int>>>>,vector<vector<pair<int,pair<int,int>>>>> geraListaFluxo(string grafopath){
         ifstream arquivo(grafopath); // Abre o arquivo do grafo
         string line;                 
         getline(arquivo, line);    
-        numVertices = stoi(line);  
+        numVertices = stoi(line);
         pesosNeg = false;  // Converte a linha em número de vértices
         vector<vector<pair<int,pair<int,int>>>> listafluxo(numVertices);  // Inicializa a lista de adjacencia, cada elemento dado um vértice (elemento do vetor maior) é um outro vértice e seu peso        vector<vector<pair<int,pair<int,int *>>>> graforesidual(numVertices);
         // Processa cada linha do arquivo para preencher a matriz
-        vector<vector<pair<int,int>>> graforesidual(numVertices);
+        vector<vector<pair<int,pair<int,int>>>> graforesidual(numVertices);
         while (getline(arquivo, line)) {
             for (int i = 0; i < line.length(); i++) {
                 if (line[i] == ' ') {  // Identifica a separação entre vértices conectados
                 for (int j = i+1; j<line.length(); j++){
                     if (line[j] == ' '){ //Testar a geração do grafo residual, se funcionar, continuar para o fordo fulkerso
                         this->numArestas++;  // Incrementa o número de arestas
-                        if ((stof(line.substr(j+1))) < 0.0){pesosNeg = true;}
+                        if ((stoi(line.substr(j+1))) < 0.0){pesosNeg = true;}
 
                         listafluxo[stoi(line.substr(0, i)) - 1].push_back({stoi(line.substr(i + 1,j)) - 1 , {stoi(line.substr(j+1)),0}});
-                        graforesidual[stoi(line.substr(0, i)) - 1].push_back({stoi(line.substr(i + 1,j)) - 1 , stoi(line.substr(j+1))}); 
+                        graforesidual[stoi(line.substr(0, i)) - 1].push_back({stoi(line.substr(i + 1,j)) - 1 , {1,stoi(line.substr(j+1))}}); 
                         //Cria a aresta original: c(e) - f(e)
-                        graforesidual[stoi(line.substr(i + 1,j)) - 1].push_back({stoi(line.substr(0, i)) - 1 , 0}); //Cria a aresta reversa, capacidade inicial 0 (f(e) inicial).
+                        graforesidual[stoi(line.substr(i + 1,j)) - 1].push_back({stoi(line.substr(0, i)) - 1 , {0,0}}); //Cria a aresta reversa, capacidade inicial 0 (f(e) inicial).
                         //Cria a aresta reversa f(e)
+                        //para caso de arestas indo e voltando, o marcador 1 e 0 determina, no grafo residual, se a aresta é original ou reversa
                         }
                     }
                     break;
@@ -408,7 +409,7 @@ public:
     }
 
     // Função BFS que retorna o nível e o pai de cada vértice
-    vector<vector<int>> BFS(int verticeInicial) {
+ vector<vector<int>> BFS(int verticeInicial) {
         vector<int> nivel(numVertices, -1);  // Vetor com o nível de cada vértice
         vector<int> pai(numVertices, -1);    // Vetor com o pai de cada vértice
         queue<int> fila;
@@ -432,7 +433,6 @@ public:
                     }
                 
             } else { // Se está usando lista de adjacência
-                if (!fluxo){
                     for (int vizinho : listaAdj[v]) {
                         if (nivel[vizinho] == -1) {
                             fila.push(vizinho);
@@ -441,19 +441,7 @@ public:
                         }
                     }
                 }
-                //aceita fluxo também
-                else{ //se é um grafo de fluxo, vizinho.first é o vértice ligado ao vértice v. vizinho.second é o pair que contém capacidade e fluxo do grafo residual ( só calculo fluxo com ford fulkerson, então só o grafo residual vale mesmo)
-                    for (pair<int,int> vizinho : graforesidual[v]) {
-                        if ((nivel[vizinho.first] == -1) and (vizinho.second != 0)) { //se a capacidade for zero, é como se não tivesse aresta
-                            fila.push(vizinho.first);
-                            nivel[vizinho.first] = nivel[v] + 1;
-                            pai[vizinho.first] = v;
-                        }
-                    }
-
-                }
             }
-        }
         vector<vector<int>> arvore = {nivel, pai};
         return arvore;
     }
@@ -705,74 +693,76 @@ public:
         return {nomes_map,vert_map};
     };
     //Função que determina a partir de um vetores de pai, e da informação do vértice inicial, retorna o caminho mínimo em ordem reversa
+
     vector<int> caminhominimo(int v, vector<int> vetorpai){
-         // adicionar um elemento ao final que é o gargalo, para evitar percorrer o vetor caminho em um momento posterior.
         vector<int> caminho ={};
         int da_vez = v;
         caminho.push_back(v);
-        if (fluxo){ //a função caminho mínimo mudou para o caso de fluxo só para evitar recalcular o gargalo
-            if (not(usaMatriz)){
-                int capacidade_min = numeric_limits<int>::max();
-                while(vetorpai[da_vez] != -1){
-                    for (pair<int,int> vizinho : graforesidual[vetorpai[da_vez]]) {
-                        if (vizinho.first == da_vez) {
-                            capacidade_min = min(capacidade_min, vizinho.second);
-                                 
-                            }
-                        }
-                    caminho.push_back(vetorpai[da_vez]);
-                    da_vez = vetorpai[da_vez];
-                    }
-                    caminho.push_back(capacidade_min);
-                }
-            }
-        else{
             while(vetorpai[da_vez] != -1){
                 caminho.push_back(vetorpai[da_vez]);
                 da_vez = vetorpai[da_vez];
             }
-        }
         return caminho;
     }
 
+    // parte do ford
+     vector<pair<int,int>> BFSFORD(int verticeInicial) {
+        vector<int> nivel(numVertices, -1);  // Vetor com o nível de cada vértice
+        vector<pair<int,int>> pai(numVertices,{-1,-1});    // Vetor com o pai de cada vértice
+        queue<int> fila;
+        nivel[verticeInicial] = 0;
+        fila.push(verticeInicial);
+        //usa fila para fazer a BFS, adicionando os vizinhos do primeiro vértice da lista
+        // e removendo-o após todos os seus vizinhos terem sido visitados
+        while (!fila.empty()) {
+            int v = fila.front();
+            fila.pop();
+                for (pair<int,pair<int,int>> vizinho : graforesidual[v]) {
+                    if ((nivel[vizinho.first] == -1) and (vizinho.second.second > 0)) { //se a capacidade for zero, é como se não tivesse aresta
+                        fila.push(vizinho.first);
+                        nivel[vizinho.first] = nivel[v] + 1;
+                        pai[vizinho.first].first = v;
+                        pai[vizinho.first].second = vizinho.second.first; //marcador para saber qual aresta usar ao reconstruir o caminho mínimo, dá a tipagem: original ou reversa, da aresta
+                        
+                }            
+            }
+        }
+        return pai;
+    }
+
+
+    pair<int,vector<pair<int,int>>> gargalofunc(int fonte, int sumidouro){
+        vector<pair<int,int>> vetorpai = BFSFORD(fonte);
+        int garga=0;
+        vector<pair<int,int>> caminho ={};
+        int da_vez = sumidouro;
+        caminho.push_back({sumidouro,-1});//o -1 pois esse valor não importa
+        int capacidade_min = numeric_limits<int>::max();
+            while(vetorpai[da_vez].first != -1){
+                for (pair<int,pair<int,int>> vizinho : graforesidual[vetorpai[da_vez].first]) {
+                    if ((vizinho.first == da_vez) and (vizinho.second.first == vetorpai[da_vez].second)) {//se for a aresta correta, ou seja, liga os vértices corretamente e é do tipo certo
+                        capacidade_min = min(capacidade_min, vizinho.second.second);                                 
+                        }                
+                    }
+                caminho.push_back({vetorpai[da_vez].first,vetorpai[da_vez].second});
+                da_vez = vetorpai[da_vez].first;
+                }
+        garga = capacidade_min;
+        if ((caminho.size() == 1)){
+            garga = 0; //se não tiver caminho, não tem gargalo
+        }
+        return {garga,caminho};
+    }
+
+
     //Função que reatualiza o grafo de fluxo e os grafos residuais, dado o caminho e o gargalo, até não haver mais caminho
     pair<int,vector<vector<pair<int,pair<int,int>>>>> fordfulkerso(int fonte, int sumidouro,bool escreve){ 
-        vector<int> caminho;
-        int real; //Se original for 1, o fluxo aumenta em gargo, se oirignal for -1, fluxo diminui em gargo: não preciso ver os dois, se é original ou se é reversa, basta ver 1 e deixar um marcador que vê se foi efetivo ou não
-        int gargo;
-        tie(gargo,caminho) =gargalo(fonte,sumidouro); // o vetor caminho é organizado do sumidouro até a fonte
-        int fluxomaximo = gargo;
-        while (gargo != 0){
-            for (int i = (caminho.size()-1) ; i>=1 ; i--){ // para cada aresta do caminho, preciso saber se ela é original ou não
-                real = 0;
-                for (pair<int,pair<int,int>>& j : listafluxo[caminho[i]]){
-                    if (j.first == caminho[i-1]){//se achar a aresta aqui, ela é não original no grafo residual, pois a aresta real é i-1 -> i.
-                        j.second.second = j.second.second - gargo; //tirar o valor gargalo do fluxo dessa aresta
-                        real = -1;
-                    }
-                }
-                if (real == 0){
-                    for (pair<int,pair<int,int>>& j : listafluxo[caminho[i-1]]){ 
-                        if (j.first == caminho[i]){//se achar a aresta aqui, ela é uma aresta original no grafo residual, pois a aresta real é i-1 -> i.
-                            j.second.second = j.second.second + gargo;// adicionar o valor gargalo do fluxo dessa aresta
-                            real = 1;
-                            }
-                        }
-                }
-                    //agora, atualizar a capacidade do graforesidual: mexer na aresta original e reversa
-                    //aumenta ou diminui a capacidade das arestas do grafo residual em função do aumento ou diminuição do fluxo
-                    for (pair<int,int>& original : graforesidual[caminho[i-1]]){
-                        if (original.first == caminho[i]){ //procurar a aresta original
-                            original.second = original.second - (gargo*real); //Aresta original é c(e) - f(e): se f(e) aumenta em gargo, a capacidade da aresta original se reduz em gargo
-                        }
-                    }
-                    for (pair<int,int>& reversa : graforesidual[caminho[i]]){
-                        if (reversa.first == caminho[i-1]){ //procurar a aresta original
-                            reversa.second = reversa.second + (gargo*real); //Aresta reversa é f(e): se f(e) aumenta em gargo, a capacidade da aresta reversa aumenta em gargo
-                        }
-                    }                   
-                }
-            tie(gargo,caminho) = gargalo(fonte,sumidouro);
+        vector<pair<int,int>> caminho;
+        int gargo = 1; //só para entrar no while, valor será redefinido
+        int fluxomaximo = 0;
+        while (gargo >0){ 
+            tie(gargo,caminho) = gargalofunc(fonte,sumidouro);
+            aumentacam(gargo,caminho);
             fluxomaximo += gargo;
         }
         fluxo_aloc(escreve,listafluxo);
@@ -780,24 +770,49 @@ public:
 
     //Ideia do ford fulkerso: para cada iteração, achar o caminho-gargalo. satura-lo, até que não haja mais caminhos gargalo?
 };        
+    void aumentacam(int gargalo, vector<pair<int,int>> caminho) {
+        for (int i = 0; i < (caminho.size()-1);i++){//para cada aresta do caminho
+            int saida = caminho[i+1].first; //aresta no vetor caminho mínimo vai de i+1 para i
+            int entrada = caminho[i].first;
+            int tipo = caminho[i+1].second;
+            //Descobrindo se a aresta saida-entrada é real ou não
+            if (tipo == 1){
+                for (pair<int,pair<int,int>>& aresta : listafluxo[saida]){
+                    if (aresta.first == entrada){
+                        aresta.second.second += gargalo; //nesse caso, estamos tratando de uma aresta original
+                        break;
+                    }
+                }
+            }
+            if (tipo == 0){
+                for (pair<int,pair<int,int>>& aresta : listafluxo[entrada]){
+                    if (aresta.first == saida){
+                        aresta.second.second -= gargalo; //nesse caso, estamos tratando de uma aresta reversa
+                        break;
+                    }
+                }                
+            }
+            //a capacidade da aresta utilizada sempre diminui: é a lógica do grafo residual: se for original, a usar aumenta o fluxo logo diminui sua capacidade. se for reversa, a usar reduz o fluxo logo sua capacidade
+            for (pair<int,pair<int,int>>& aresta : graforesidual[saida]){
+                    if (aresta.first == entrada and aresta.second.first == tipo){
+                        aresta.second.second -= gargalo;
+                        break;
+                    }
+            }
+            for (pair<int,pair<int,int>>& aresta : graforesidual[entrada]){
+                    if (aresta.first == saida and aresta.second.first == tipo){
+                        aresta.second.second += gargalo;
+                        break;
+                    }
+                }
 
-    pair<int,vector<int>> gargalo(int fonte, int sumidouro){
-        //Função que retorna organiza o valor do gargalo já obtido
-        vector<int> caminho_gargalo;
-        int garga;
-        caminho_gargalo = caminhominimo(sumidouro,  BFS(fonte)[1]);//BFS foi alterada de forma à conseguir lidar com grafos fluxo
-        garga = caminho_gargalo[caminho_gargalo.size()-1];
-        caminho_gargalo.pop_back(); //é o valor do gargalo, calculado na função caminho_mínimo enquanto forma o caminho mínimo
-        if (caminho_gargalo.size() == 1){
-            garga = 0; //se não tiver caminho, não tem gargalo
         }
-        return {garga,caminho_gargalo};
-    }
-    
+
+    }    
     void fluxo_aloc(bool escreve, vector<vector<pair<int,pair<int,int>>>> grafofluxo){//Para escrever o arquivo com a alocação de fluxo.
         ofstream alocacao("alocfluxo.txt");
         alocacao << "Vértice saída" <<"  "<< "Vértice entrada" << "  " << "Fluxo"<< endl;
-        for (int i = 0; i< numVertices; i++){
+        for (int i = 0; i < numVertices; i++){
             for (int j = 0; j< grafofluxo[i].size();j++){
                 alocacao << i+1 <<"  "<< grafofluxo[i][j].first+1 << "  "<<grafofluxo[i][j].second.second << endl; 
             }
@@ -813,11 +828,11 @@ int main() {
     vector<int> caminho;
     vector<vector<float>> aux;
     string path;
-    int fluxomaximo;
+    int fluxomaximo = 0;
     vector<vector<pair<int,pair<int,int>>>> graforesultado;
 
     //Obtenção dos dados, usando apenas lista de adjacencia, pelas exigências
-    Grafo g("grafo_rf_1.txt", 0, 1, 1,1);
+    Grafo g("grafo_rf_4.txt", 0, 1, 1,1);
     tie(fluxomaximo,graforesultado) =g.fordfulkerso(0,1,1);
     cout << fluxomaximo << endl;
     random_device dev; 
