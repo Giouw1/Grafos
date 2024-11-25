@@ -740,7 +740,7 @@ public:
         int capacidade_min = numeric_limits<int>::max();
             while(vetorpai[da_vez].first != -1){
                 for (pair<int,pair<int,int>> vizinho : graforesidual[vetorpai[da_vez].first]) {
-                    if ((vizinho.first == da_vez) and (vizinho.second.first == vetorpai[da_vez].second)) {//se for a aresta correta, ou seja, liga os vértices corretamente e é do tipo certo
+                    if ((vizinho.first == da_vez) and (vizinho.second.first == vetorpai[da_vez].second)) {//se for a aresta correta, ou seja, liga os vértices corretamente e é do tipo certo(original ou reversa)
                         capacidade_min = min(capacidade_min, vizinho.second.second);                                 
                         }                
                     }
@@ -775,7 +775,7 @@ public:
             int saida = caminho[i+1].first; //aresta no vetor caminho mínimo vai de i+1 para i
             int entrada = caminho[i].first;
             int tipo = caminho[i+1].second;
-            //Descobrindo se a aresta saida-entrada é real ou não
+            //Descobrindo se a aresta saida-entrada é real ou não a partir do tipo
             if (tipo == 1){
                 for (pair<int,pair<int,int>>& aresta : listafluxo[saida]){
                     if (aresta.first == entrada){
@@ -794,13 +794,13 @@ public:
             }
             //a capacidade da aresta utilizada sempre diminui: é a lógica do grafo residual: se for original, a usar aumenta o fluxo logo diminui sua capacidade. se for reversa, a usar reduz o fluxo logo sua capacidade
             for (pair<int,pair<int,int>>& aresta : graforesidual[saida]){
-                    if (aresta.first == entrada and aresta.second.first == tipo){
+                    if (aresta.first == entrada and aresta.second.first == tipo){ //verifica o tipo para garantir a corretude da aresta
                         aresta.second.second -= gargalo;
                         break;
                     }
             }
             for (pair<int,pair<int,int>>& aresta : graforesidual[entrada]){
-                    if (aresta.first == saida and aresta.second.first == tipo){
+                    if (aresta.first == saida and aresta.second.first == tipo){ //verifica o tipo para garantir a corretude da aresta
                         aresta.second.second += gargalo;
                         break;
                     }
