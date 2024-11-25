@@ -285,7 +285,7 @@ private:
                         //Cria a aresta original: c(e) - f(e)
                         graforesidual[stoi(line.substr(i + 1,j)) - 1].push_back({stoi(line.substr(0, i)) - 1 , {0,0}}); //Cria a aresta reversa, capacidade inicial 0 (f(e) inicial).
                         //Cria a aresta reversa f(e)
-                        //para caso de arestas indo e voltando, o marcador 1 e 0 determina, no grafo residual, se a aresta é original ou reversa
+                        //para caso de arestas indo e voltando, o marcador 1 e 0 determina, no grafo residual, se a aresta é original ou reversa: é o graforesidual[u].second.first: tipo da aresta de u para graforesidual[u].first
                         }
                     }
                     break;
